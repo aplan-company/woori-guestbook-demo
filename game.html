@@ -4,36 +4,101 @@
 <meta charset="UTF-8">
 <title>송출 · 우리 새해 방명록</title>
 <style>
-  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; }
+  @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:block; }
+  @font-face { font-family:"Wooridaum"; font-weight:400; src:url(assets/fonts/WooridaumR.woff2) format("woff2"); font-display:block; }
+  @font-face { font-family:"NanumPen"; src:url(assets/fonts/NanumPenScript.woff2) format("woff2"); font-display:block; }
+  :root {
+    --main1:#0067AC; --main2:#2482C5; --sub1:#253a71; --sub2:#123f6d; --sub3:#00aec6;
+    --neon:#bdf0ff; --glow:#4cc3ff; --gold:#e8c66a; --heart:#ff6fa8;
+  }
   html,body { margin:0; height:100%; background:#000; overflow:hidden; cursor:none;
-    font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+    font-family:"Wooridaum","Malgun Gothic","Apple SD Gothic Neo",sans-serif; }
   #stage { position:absolute; left:0; top:0; transform-origin:0 0; display:flex; }
-  .panel { position:relative; overflow:hidden; color:#fff;
-    background: radial-gradient(90% 60% at 50% 18%, #1b5592 0%, var(--navy) 55%, #050d1a 100%); }
-  .panel::before { content:""; position:absolute; inset:0; opacity:.55;
-    background-image: radial-gradient(2px 2px at 20% 30%, #fff8 50%, transparent 51%), radial-gradient(2px 2px at 70% 12%, #fff6 50%, transparent 51%),
-      radial-gradient(3px 3px at 82% 64%, #e3c35a99 50%, transparent 51%), radial-gradient(2px 2px at 35% 80%, #fff5 50%, transparent 51%),
-      radial-gradient(2px 2px at 55% 45%, #45a9fe99 50%, transparent 51%);
-    background-size: 600px 600px; animation: drift 40s linear infinite; }
-  @keyframes drift { to { background-position: 0 -600px; } }
-  .top { position:absolute; top:7%; width:100%; text-align:center; font-weight:800; letter-spacing:.12em; color:var(--gold); }
-  .frame { position:absolute; left:50%; top:14%; transform:translateX(-50%) scale(.92); opacity:0;
-    border-radius:48px; overflow:hidden; box-shadow:0 0 0 6px rgba(227,195,90,.85), 0 0 80px rgba(69,169,254,.45);
-    transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s; }
-  .panel.live .frame { transform:translateX(-50%) scale(1); opacity:1; }
-  .frame video { width:100%; height:100%; object-fit:cover; display:block; transform:scaleX(-1); background:#000; }
-  .msg { position:absolute; width:86%; left:7%; text-align:center; font-weight:900; line-height:1.2;
-    text-shadow:0 4px 24px rgba(0,0,0,.6); opacity:0; transform:translateY(30px); transition:.9s .25s; word-break:keep-all; }
-  .panel.live .msg { opacity:1; transform:none; }
-  .slogan { position:absolute; bottom:5%; width:100%; text-align:center; font-weight:900; color:var(--sky); letter-spacing:.02em; }
-  .idle { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-    transition:opacity .8s; }
+  #fx { position:absolute; left:0; top:0; pointer-events:none; z-index:5; }
+
+  /* ---------- 패널 (1080×1920 기준 좌표) ---------- */
+  .panel { position:relative; overflow:hidden; color:#fff; background:#02050b; }
+  .inner { position:absolute; left:0; top:0; width:1080px; height:1920px; transform-origin:0 0; }
+  .bg { position:absolute; inset:0;
+    background:
+      radial-gradient(140% 38% at 50% 106%, rgba(110,200,255,.55) 0%, rgba(36,130,197,.45) 22%, rgba(0,103,172,.18) 48%, transparent 70%),
+      radial-gradient(90% 40% at 50% 0%, rgba(37,58,113,.55), transparent 70%),
+      linear-gradient(180deg, #02050b 0%, #040b18 55%, #071a33 100%); }
+  /* 우리금융 디자인 모티프: 숫자 '1'의 사선 띠 */
+  .bg::before { content:""; position:absolute; left:-30%; top:-10%; width:160%; height:120%;
+    background: linear-gradient(118deg, transparent 38%, rgba(36,130,197,.10) 38%, rgba(36,130,197,.10) 58%, transparent 58%);
+    animation: band 14s ease-in-out infinite alternate; }
+  @keyframes band { to { transform: translateX(6%); } }
+  /* 여명 수평선 */
+  .bg::after { content:""; position:absolute; left:-20%; right:-20%; top:1690px; height:600px; border-radius:50%;
+    border-top:3px solid rgba(190,235,255,.55); box-shadow: 0 -14px 60px rgba(120,210,255,.45), inset 0 20px 80px rgba(0,103,172,.5);
+    background: linear-gradient(180deg, rgba(0,103,172,.55), #02101f 40%); }
+
+  .pill { position:absolute; left:64px; top:84px; padding:16px 34px 18px; border-radius:999px; font-size:40px; font-weight:700; letter-spacing:.02em;
+    border:3px solid var(--neon); color:#fff;
+    box-shadow: 0 0 10px var(--glow), 0 0 28px rgba(76,195,255,.6), inset 0 0 14px rgba(76,195,255,.45);
+    text-shadow: 0 0 10px rgba(76,195,255,.9); background:rgba(4,20,40,.45); }
+  .year { position:absolute; right:64px; top:58px; font-size:118px; font-weight:700; letter-spacing:-.02em; line-height:1;
+    background: linear-gradient(105deg, #8c6b26 0%, #f7e4a4 18%, #c69b3e 32%, #fff6d2 46%, #b48a34 60%, #f1d68a 78%, #8c6b26 100%);
+    background-size: 220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter: drop-shadow(0 0 14px rgba(232,198,106,.45)); animation: shine 6s linear infinite; }
+  @keyframes shine { to { background-position: -220% 0; } }
+
+  /* 네온 액자 */
+  .frame { position:absolute; left:100px; top:250px; width:880px; height:1180px; border-radius:60px; overflow:hidden;
+    border:8px solid var(--neon); background:rgba(3,14,30,.55);
+    box-shadow: 0 0 14px var(--glow), 0 0 44px var(--main2), 0 0 110px rgba(0,174,198,.55), inset 0 0 36px rgba(76,195,255,.55);
+    animation: breathe 3.6s ease-in-out infinite; }
+  @keyframes breathe { 50% { box-shadow: 0 0 10px var(--glow), 0 0 30px var(--main2), 0 0 70px rgba(0,174,198,.35), inset 0 0 26px rgba(76,195,255,.4); } }
+  .panel.live .frame { animation: flicker .9s steps(1) 1, breathe 3.6s ease-in-out .9s infinite; }
+  @keyframes flicker { 0%{opacity:1} 8%{opacity:.25} 14%{opacity:1} 22%{opacity:.4} 30%{opacity:1} 100%{opacity:1} }
+  .frame video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); opacity:0; transition:opacity .9s .15s; }
+  .panel.live .frame video { opacity:1; }
+  .frame::after { content:""; position:absolute; inset:-20%; pointer-events:none; opacity:0;
+    background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%); transform: translateX(-80%); }
+  .panel.live .frame::after { animation: sweep 1.4s .3s ease-out 1; }
+  @keyframes sweep { 0%{opacity:1; transform:translateX(-80%)} 100%{opacity:1; transform:translateX(80%)} }
+
+  /* 대기 화면 (QR) */
+  .idle { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; transition:opacity .7s; }
   .panel.live .idle { opacity:0; }
-  .sun { border-radius:50%; background:radial-gradient(circle, #fff6d6 0%, var(--gold) 45%, rgba(227,195,90,0) 70%); animation:breathe 4s ease-in-out infinite; }
-  @keyframes breathe { 50% { transform:scale(1.12); opacity:.8; } }
-  .idle .t1 { font-weight:900; margin-top:6%; }
-  .idle .t2 { color:#a9c1dd; margin-top:2%; }
-  #hud { position:fixed; left:10px; bottom:8px; color:#7fa; font:12px/1.4 monospace; background:#000a; padding:6px 10px; display:none; white-space:pre; }
+  .idle .k { font-size:30px; letter-spacing:.32em; color:#9fdcff; font-weight:400; }
+  .idle .t1 { font-size:86px; font-weight:700; line-height:1.18; margin:22px 0 46px; text-shadow:0 0 30px rgba(76,195,255,.5); }
+  .qr { width:400px; height:400px; padding:26px; box-sizing:border-box; background:#fff; border-radius:40px;
+    box-shadow: 0 0 0 6px rgba(189,240,255,.9), 0 0 50px rgba(76,195,255,.8); }
+  .qr svg, .qr img { width:100%; height:100%; display:block; }
+  .idle .t2 { font-size:38px; color:#cfe6fb; margin-top:44px; line-height:1.5; font-weight:400; }
+  .steps { display:flex; gap:18px; margin-top:34px; }
+  .steps span { font-size:30px; padding:12px 24px; border-radius:999px; border:2px solid rgba(189,240,255,.55); color:#e6f6ff; }
+  .steps b { color:var(--gold); margin-right:8px; }
+
+  /* 손글씨 네온 메시지 */
+  .msg { position:absolute; left:40px; width:1000px; top:1330px; height:300px; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+  .msg .w { display:inline-block; font-family:"NanumPen",cursive; color:#fff; line-height:.98; text-align:center; word-break:keep-all; max-width:960px;
+    transform: rotate(-4deg);
+    text-shadow: 0 0 4px #fff, 0 0 12px var(--glow), 0 0 26px var(--main2), 0 0 48px var(--main2), 0 6px 20px rgba(0,0,0,.6);
+    clip-path: inset(-20% 102% -20% -2%); }
+  .panel.live .msg .w { animation: write 1.6s .9s cubic-bezier(.5,.1,.4,1) forwards; }
+  @keyframes write { to { clip-path: inset(-20% -6% -20% -2%); } }
+  .heart { display:inline-block; vertical-align:-0.08em; margin-left:.12em; width:.8em; height:.8em; overflow:visible; }
+  .heart path { fill:none; stroke:var(--heart); stroke-width:7; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:300; stroke-dashoffset:300;
+    filter: drop-shadow(0 0 6px var(--heart)) drop-shadow(0 0 16px var(--heart)); }
+  .panel.live .heart path { animation: draw 1s 2.5s ease-out forwards, beat 1.6s 3.5s ease-in-out infinite; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  @keyframes beat { 50% { stroke-width:9; filter: drop-shadow(0 0 10px var(--heart)) drop-shadow(0 0 26px var(--heart)); } }
+
+  /* 하단 브랜드: 「우리는 해」 + 우리금융그룹 CI */
+  .brand { position:absolute; left:0; right:0; top:1650px; display:flex; flex-direction:column; align-items:center; }
+  .slogan { display:flex; align-items:center; gap:22px; font-size:84px; font-weight:700; letter-spacing:-.01em; color:#fff;
+    text-shadow: 0 0 22px rgba(120,210,255,.55); }
+  .slogan .sun { position:relative; width:104px; height:104px; display:grid; place-items:center; }
+  .slogan .sun img { position:absolute; inset:0; width:100%; height:100%; filter: drop-shadow(0 0 22px rgba(160,225,255,.9)); animation: rise 5s ease-in-out infinite; }
+  .slogan .sun i { position:relative; top:8px; font-style:normal; font-size:60px; color:#0a4f8c; }
+  @keyframes rise { 50% { transform: translateY(-6px) scale(1.04); } }
+  .ci { height:46px; margin-top:34px; opacity:.95; }
+
+  .msg { transition:opacity .6s; } .panel.out .msg, .panel.out .frame video { opacity:0; }
+  #hud { position:fixed; left:10px; bottom:8px; color:#7fa; font:12px/1.4 monospace; background:#000a; padding:6px 10px; display:none; white-space:pre; z-index:9; }
 </style>
 </head>
 <body>
@@ -41,6 +106,7 @@
 <div id="hud"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/qrcode.js"></script>
 <script>
 const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
 const SB_URL = 'https://jmsnadveqmduzprrevlb.supabase.co';  // Supabase 프로젝트 URL
@@ -223,33 +289,111 @@ const POLL_MS = 1500;
 const PRELOAD = 4;                      // 미리 받아둘 영상 수 (검수 대기 포함)
 
 const stage = document.getElementById('stage');
-stage.style.width = PANEL_W * SIDES.length + 'px';
+const STAGE_W = PANEL_W * SIDES.length;
+stage.style.width = STAGE_W + 'px';
 stage.style.height = PANEL_H + 'px';
-const S = PANEL_W / 1080; // 글자 크기 기준 배율
+const S = PANEL_W / 1080; // 디자인 기준(1080×1920) 대비 배율
+
+// 참여 페이지 주소 (QR) — 운영 키(key)는 빼고, Apps Script 모드면 api만 전달
+const JOIN_URL = (() => {
+  const u = new URL('mobile.html', location.href);
+  u.search = ''; if (QS.get('api')) u.searchParams.set('api', QS.get('api'));
+  if (QS.has('local')) u.searchParams.set('local', '');
+  return u.href;
+})();
+function qrSvg(text) {
+  if (typeof qrcode === 'undefined') return '';
+  const q = qrcode(0, 'M'); q.addData(text); q.make();
+  return q.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+}
+const QR = qrSvg(JOIN_URL);
+const HEART = '<svg class="heart" viewBox="0 0 100 92"><path d="M50 86 C22 64 6 48 6 28 C6 14 17 4 30 4 C40 4 47 10 50 18 C53 10 60 4 70 4 C83 4 94 14 94 28 C94 48 78 64 50 86 Z"/></svg>';
 
 const panels = SIDES.map(side => {
   const el = document.createElement('div');
   el.className = 'panel';
   el.style.width = PANEL_W + 'px'; el.style.height = PANEL_H + 'px';
   el.innerHTML = `
-    <div class="top" style="font-size:${34*S}px">2027 우리 새해 방명록</div>
-    <div class="idle">
-      <div class="sun" style="width:${360*S}px;height:${360*S}px"></div>
-      <div class="t1" style="font-size:${64*S}px">새해 인사를 남겨주세요</div>
-      <div class="t2" style="font-size:${34*S}px">광장의 QR을 찍으면<br>이 벽에 내 영상이 나와요</div>
+  <div class="inner" style="transform:scale(${S})">
+    <div class="bg"></div>
+    <div class="pill">「우리 새해 방명록」</div>
+    <div class="year">2027</div>
+    <div class="frame">
+      <video muted playsinline></video>
+      <div class="idle">
+        <div class="k">NEW YEAR GUESTBOOK</div>
+        <div class="t1">새해 인사를<br>남겨주세요</div>
+        <div class="qr">${QR}</div>
+        <div class="t2">QR을 찍으면<br>이 벽에 내 영상이 나와요</div>
+        <div class="steps"><span><b>1</b>QR 찍기</span><span><b>2</b>10초 셀피</span><span><b>3</b>외벽에 짠!</span></div>
+      </div>
     </div>
-    <div class="frame" style="width:${860*S}px;height:${1150*S}px"><video muted playsinline></video></div>
-    <div class="msg" style="top:${14 + 1150/1920*100 + 3}%;font-size:${76*S}px"></div>
-    <div class="slogan" style="font-size:${56*S}px">새해, 우리는 해</div>`;
+    <div class="msg"><div class="w"></div></div>
+    <div class="brand">
+      <div class="slogan">우리는 <span class="sun"><img src="assets/yeomyeong.png" alt=""><i>해</i></span></div>
+      <img class="ci" src="assets/ci_white.png" alt="우리금융그룹">
+    </div>
+  </div>`;
   stage.appendChild(el);
-  return { side, el, video: el.querySelector('video'), msg: el.querySelector('.msg'), busy: false, item: null };
+  return { side, el, video: el.querySelector('video'), msg: el.querySelector('.msg .w'), busy: false, item: null };
 });
 
+// 손글씨 메시지: 글자 수에 맞춰 크기 조절 (최대 2줄)
+function setMessage(p, text) {
+  const w = p.msg;
+  w.innerHTML = '';
+  if (!text) return;
+  w.append(document.createTextNode(text));
+  w.insertAdjacentHTML('beforeend', HEART);
+  let size = 150;
+  w.style.fontSize = size + 'px';
+  while (size > 70 && (w.scrollWidth > 960 || w.offsetHeight > size * 0.98 * 2 + 4)) { size -= 6; w.style.fontSize = size + 'px'; }
+}
+
 function fit() {
-  const sc = Math.min(innerWidth / (PANEL_W * SIDES.length), innerHeight / PANEL_H);
-  stage.style.transform = `translate(${(innerWidth - PANEL_W * SIDES.length * sc) / 2}px, ${(innerHeight - PANEL_H * sc) / 2}px) scale(${sc})`;
+  const sc = Math.min(innerWidth / STAGE_W, innerHeight / PANEL_H);
+  stage.style.transform = `translate(${(innerWidth - STAGE_W * sc) / 2}px, ${(innerHeight - PANEL_H * sc) / 2}px) scale(${sc})`;
 }
 addEventListener('resize', fit); fit();
+
+// ===== 반짝이 효과 (금빛 먼지 + 송출 시작 폭죽) =====
+const fx = document.createElement('canvas');
+fx.id = 'fx'; fx.width = STAGE_W; fx.height = PANEL_H; stage.appendChild(fx);
+const ctx = fx.getContext('2d');
+const dust = Array.from({ length: 110 }, () => ({
+  x: Math.random() * STAGE_W, y: Math.random() * PANEL_H, r: (Math.random() * 2.4 + .6) * S,
+  vy: -(Math.random() * .25 + .05) * S, ph: Math.random() * 6.28, gold: Math.random() < .55 }));
+const sparks = [];
+function burst(p) {
+  const i = panels.indexOf(p), ox = i * PANEL_W, f = { x: ox + 100 * S, y: 250 * S, w: 880 * S, h: 1180 * S };
+  for (let k = 0; k < 220; k++) {
+    // 액자 테두리를 따라 터지는 불꽃
+    const t = Math.random(), edge = k % 4;
+    const x = edge === 0 ? f.x + t * f.w : edge === 1 ? f.x + f.w : edge === 2 ? f.x + t * f.w : f.x;
+    const y = edge === 0 ? f.y : edge === 1 ? f.y + t * f.h : edge === 2 ? f.y + f.h : f.y + t * f.h;
+    const a = Math.random() * 6.28, sp = (Math.random() * 6 + 2) * S;
+    sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, r: (Math.random() * 4 + 3) * S, gold: Math.random() < .6 });
+  }
+}
+(function loop(t) {
+  ctx.clearRect(0, 0, fx.width, fx.height);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const d of dust) {
+    d.y += d.vy; if (d.y < -10) { d.y = PANEL_H + 10; d.x = Math.random() * STAGE_W; }
+    const a = .25 + .35 * (1 + Math.sin(t / 700 + d.ph)) / 2;
+    ctx.fillStyle = d.gold ? `rgba(240,205,120,${a})` : `rgba(140,215,255,${a})`;
+    ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.28); ctx.fill();
+  }
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += s.vx; s.y += s.vy; s.vx *= .96; s.vy = s.vy * .96 + .06 * S; s.life -= .012;
+    if (s.life <= 0) { sparks.splice(i, 1); continue; }
+    ctx.fillStyle = s.gold ? `rgba(255,220,140,${s.life})` : `rgba(170,230,255,${s.life})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r * (0.5 + s.life / 2), 0, 6.28); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  requestAnimationFrame(loop);
+})(0);
 
 // ===== 대기열 =====
 // 검수 대기(pending) 단계부터 영상을 미리 받아두고, 승인(approved)되면 바로 재생
@@ -310,10 +454,10 @@ function play(p, it) {
   p.busy = true; p.item = it;
   const url = ready.get(it.id); ready.delete(it.id);
   let count = 0;
-  p.msg.textContent = it.message || '';
+  setMessage(p, it.message || '');
   p.video.src = url;
   const start = () => p.video.play().catch(() => {});
-  p.video.onloadeddata = () => { p.el.classList.add('live'); start(); };
+  p.video.onloadeddata = () => { p.el.classList.add('live'); burst(p); start(); };
   p.video.onended = () => { count++; if (count < LOOPS) { p.video.currentTime = 0; start(); } else finish(); };
   const guard = setTimeout(finish, 15000 * LOOPS); // 재생 오류 대비 안전장치
   Relay.setStatus(it.id, 'playing', p.side).catch(() => {});
@@ -321,10 +465,11 @@ function play(p, it) {
   function finish() {
     if (doneOnce) return; doneOnce = true;
     clearTimeout(guard);
-    p.el.classList.remove('live');
+    p.el.classList.add('out');
     Relay.setStatus(it.id, 'played', p.side).catch(() => {}); // → 중간지점에서 즉시 파기
     played++;
     setTimeout(() => {
+      p.el.classList.remove('live', 'out');
       p.video.removeAttribute('src'); p.video.load();
       URL.revokeObjectURL(url);
       p.busy = false; p.item = null;
@@ -347,6 +492,7 @@ setInterval(() => {
     panels.map(p => `${p.side}: ${p.item ? '#' + p.item.id : '-'}`).join('  ') + (lastErr ? `\nerr: ${lastErr}` : '');
 }, 500);
 
+document.fonts && document.fonts.load('100px NanumPen'); // 손글씨 폰트 미리 받기
 poll();
 const live = Relay.subscribe ? Relay.subscribe(poll) : false; // 실시간 알림 지원 시 즉시 반영
 setInterval(poll, live ? 5000 : POLL_MS);

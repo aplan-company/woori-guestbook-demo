@@ -5,51 +5,88 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>2027 우리 새해 방명록</title>
 <style>
-  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; --ink:#fff; --muted:#A9C1DD; --red:#FF6B6B; }
+  @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:swap; }
+  @font-face { font-family:"NanumPen"; src:url(assets/fonts/NanumPenScript.woff2) format("woff2"); font-display:swap; }
+  :root { --main1:#0067AC; --main2:#2482C5; --sub3:#00aec6; --neon:#bdf0ff; --glow:#4cc3ff; --gold:#e8c66a; --heart:#ff6fa8;
+    --ink:#fff; --muted:#a9c3dc; --red:#ff5a6e; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body { margin:0; height:100%; background:var(--navy); color:var(--ink);
+  html,body { margin:0; height:100%; background:#02060d; color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
   body { overflow:hidden; }
-  .screen { position:fixed; inset:0; display:none; flex-direction:column; padding:calc(24px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; padding:calc(18px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
   .screen.on { display:flex; }
-  .bg { background: radial-gradient(120% 80% at 50% 0%, #15457a 0%, var(--navy) 60%); }
-  .label { color:var(--gold); font-size:13px; font-weight:700; letter-spacing:.08em; }
-  h1 { font-size:30px; line-height:1.25; margin:10px 0 12px; }
+  .bg { background:
+      radial-gradient(150% 34% at 50% 108%, rgba(110,200,255,.42) 0%, rgba(36,130,197,.32) 25%, rgba(0,103,172,.12) 50%, transparent 72%),
+      linear-gradient(118deg, transparent 40%, rgba(36,130,197,.09) 40%, rgba(36,130,197,.09) 60%, transparent 60%),
+      linear-gradient(180deg, #02050b 0%, #04101f 60%, #08203b 100%); }
+  .hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .pill { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:14px; padding:7px 14px 8px; border-radius:999px; border:1.5px solid var(--neon);
+    box-shadow:0 0 8px rgba(76,195,255,.7), inset 0 0 8px rgba(76,195,255,.35); text-shadow:0 0 6px rgba(76,195,255,.9); background:rgba(4,20,40,.5); color:#fff; }
+  .year { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:30px; line-height:1; letter-spacing:-.02em;
+    background:linear-gradient(105deg,#8c6b26 0%,#f7e4a4 22%,#c69b3e 40%,#fff6d2 55%,#b48a34 72%,#f1d68a 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .label { color:var(--gold); font-size:12px; font-weight:700; letter-spacing:.14em; }
+  h1 { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:29px; line-height:1.3; margin:8px 0 10px; letter-spacing:-.01em; }
   p { color:var(--muted); font-size:15px; line-height:1.55; margin:0 0 10px; }
   .grow { flex:1; }
-  .btn { width:100%; border:0; border-radius:16px; padding:17px; font-size:17px; font-weight:700; color:#fff; background:var(--blue); }
-  .btn:disabled { opacity:.35; }
-  .btn.ghost { background:rgba(255,255,255,.1); }
-  .btn.gold { background:var(--gold); color:var(--navy); }
+  .btn { width:100%; border:0; border-radius:16px; padding:17px; font-size:17px; font-weight:700; color:#fff;
+    background:linear-gradient(135deg, var(--main1), var(--main2)); box-shadow:0 0 0 1px rgba(189,240,255,.35) inset, 0 8px 24px rgba(0,103,172,.45); }
+  .btn:disabled { opacity:.32; box-shadow:none; }
+  .btn.ghost { background:rgba(255,255,255,.1); box-shadow:0 0 0 1px rgba(255,255,255,.18) inset; }
+  .btn.gold { background:linear-gradient(105deg,#c9a24a,#f7e4a4 45%,#d9b25a); color:#1a1405; box-shadow:0 8px 26px rgba(232,198,106,.35); }
   .row { display:flex; gap:10px; }
-  .check { display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,.06); border-radius:14px; padding:14px; margin-bottom:10px; font-size:14px; line-height:1.5; color:#dce8f5; }
-  .check input { width:22px; height:22px; margin:1px 0 0; accent-color:var(--sky); flex:none; }
+  .check { display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,.055); border:1px solid rgba(189,240,255,.12); border-radius:14px; padding:13px 14px; margin-bottom:9px; font-size:13.5px; line-height:1.5; color:#dce8f5; }
+  .check input { width:22px; height:22px; margin:1px 0 0; accent-color:var(--main2); flex:none; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 16px; }
-  .chip { border:1px solid rgba(255,255,255,.25); background:transparent; color:#fff; border-radius:999px; padding:9px 14px; font-size:14px; }
-  input[type=text] { width:100%; font-size:20px; padding:16px; border-radius:14px; border:2px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; outline:none; }
-  input[type=text]:focus { border-color:var(--sky); }
+  .chip { border:1.5px solid rgba(189,240,255,.45); background:rgba(4,20,40,.4); color:#fff; border-radius:999px; padding:9px 14px; font-size:14px; }
+  .chip:active { box-shadow:0 0 12px rgba(76,195,255,.7); }
+  input[type=text] { width:100%; font-size:20px; padding:16px; border-radius:14px; border:2px solid rgba(189,240,255,.25); background:rgba(255,255,255,.06); color:#fff; outline:none; }
+  input[type=text]:focus { border-color:var(--neon); box-shadow:0 0 14px rgba(76,195,255,.5); }
   .count { text-align:right; color:var(--muted); font-size:13px; margin-top:6px; }
+  /* 미리보기 손글씨 (외벽과 같은 모양) */
+  .hand { font-family:"NanumPen",cursive; color:#fff; text-align:center; transform:rotate(-4deg); word-break:keep-all; line-height:1;
+    text-shadow:0 0 3px #fff, 0 0 10px var(--glow), 0 0 22px var(--main2), 0 3px 10px rgba(0,0,0,.6); }
+  .hand .heart { display:inline-block; width:.8em; height:.8em; margin-left:.12em; vertical-align:-.08em; overflow:visible; }
+  .heart path { fill:none; stroke:var(--heart); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 5px var(--heart)); }
+  .msgPrev { min-height:70px; display:flex; align-items:center; justify-content:center; font-size:38px; margin:6px 0 4px; }
+  /* 소개 화면 미니 외벽 */
+  .hero { position:relative; height:clamp(120px, 24vh, 210px); margin:6px 0 14px; display:flex; justify-content:center; }
+  .hero .fr { position:relative; height:100%; aspect-ratio:3/4; border:3px solid var(--neon); border-radius:18px;
+    box-shadow:0 0 8px var(--glow), 0 0 24px var(--main2), inset 0 0 14px rgba(76,195,255,.5);
+    background:radial-gradient(60% 45% at 50% 38%, rgba(140,200,240,.35), transparent 70%), rgba(3,14,30,.6); animation:breathe 3.6s ease-in-out infinite; }
+  .hero .fr::before { content:""; position:absolute; left:50%; top:22%; width:34%; aspect-ratio:1; transform:translateX(-50%); border-radius:50%; background:rgba(190,225,250,.25); }
+  .hero .fr::after { content:""; position:absolute; left:50%; top:52%; width:62%; height:30%; transform:translateX(-50%); border-radius:50% 50% 12px 12px; background:rgba(190,225,250,.18); }
+  .hero .hand { position:absolute; bottom:-6px; left:0; right:0; font-size:clamp(26px, 5.4vh, 40px); }
+  @keyframes breathe { 50% { box-shadow:0 0 6px var(--glow), 0 0 16px var(--main2), inset 0 0 10px rgba(76,195,255,.35); } }
   /* 카메라 */
   #s-cam, #s-review { padding:0; background:#000; }
   .stage { position:relative; flex:1; overflow:hidden; }
   .stage video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
-  .frame { position:absolute; inset:14px; border:3px solid rgba(227,195,90,.85); border-radius:26px; pointer-events:none; }
-  .ovTop { position:absolute; top:calc(26px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-weight:800; color:var(--gold); text-shadow:0 2px 8px rgba(0,0,0,.6); font-size:14px; letter-spacing:.08em; }
-  .ovMsg { position:absolute; bottom:150px; left:20px; right:20px; text-align:center; font-size:28px; font-weight:800; text-shadow:0 2px 14px rgba(0,0,0,.8); }
-  .bar { position:absolute; top:0; left:0; height:6px; background:var(--red); width:0; }
-  .controls { position:absolute; left:0; right:0; bottom:0; padding:18px 22px calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; align-items:center; gap:12px; background:linear-gradient(transparent, rgba(0,0,0,.65)); }
-  .rec { width:78px; height:78px; border-radius:50%; border:5px solid #fff; background:var(--red); }
-  .rec.on { border-radius:22px; transform:scale(.8); transition:.2s; }
-  .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:120px; font-weight:900; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,.6); pointer-events:none; }
-  .timer { position:absolute; top:calc(54px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:18px; font-weight:800; color:#fff; }
+  .frame { position:absolute; inset:12px; border:3px solid var(--neon); border-radius:28px; pointer-events:none;
+    box-shadow:0 0 10px var(--glow), 0 0 26px var(--main2), inset 0 0 18px rgba(76,195,255,.55); }
+  .ovTop { position:absolute; top:calc(26px + env(safe-area-inset-top)); left:26px; right:26px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .ovTop .year { font-size:26px; }
+  .ovMsg { position:absolute; bottom:140px; left:18px; right:18px; font-size:44px; pointer-events:none; }
+  .bar { position:absolute; top:0; left:0; height:5px; width:0; background:linear-gradient(90deg, var(--main2), var(--neon)); box-shadow:0 0 12px var(--glow); }
+  .controls { position:absolute; left:0; right:0; bottom:0; padding:18px 22px calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; align-items:center; gap:12px; background:linear-gradient(transparent, rgba(0,0,0,.7)); }
+  .rec { width:80px; height:80px; border-radius:50%; border:5px solid #fff; background:var(--red); box-shadow:0 0 0 6px rgba(255,255,255,.18), 0 0 24px rgba(255,90,110,.6); transition:.2s; }
+  .rec.on { border-radius:22px; transform:scale(.8); }
+  .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:"Wooridaum",sans-serif; font-size:140px; font-weight:700; color:#fff;
+    text-shadow:0 0 20px var(--glow), 0 0 50px var(--main2); pointer-events:none; }
+  .timer { position:absolute; top:calc(74px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:18px; font-weight:800; color:#fff; text-shadow:0 0 10px rgba(0,0,0,.7); }
+  .hint { position:absolute; top:calc(76px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:14px; color:#e6f3ff; text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none; }
   /* 대기 */
-  .card { background:rgba(255,255,255,.07); border-radius:20px; padding:24px 20px; text-align:center; }
-  .state { font-size:24px; font-weight:800; margin:12px 0 8px; }
-  .spinner { width:46px; height:46px; margin:0 auto; border:5px solid rgba(255,255,255,.15); border-top-color:var(--sky); border-radius:50%; animation:spin 1s linear infinite; }
+  .card { background:rgba(8,24,46,.55); border:1px solid rgba(189,240,255,.18); border-radius:22px; padding:28px 20px; text-align:center;
+    box-shadow:0 0 40px rgba(0,103,172,.25); backdrop-filter:blur(6px); }
+  .state { font-family:"Wooridaum",sans-serif; font-size:25px; font-weight:700; margin:16px 0 8px; }
+  .spinner { width:50px; height:50px; margin:0 auto; border:4px solid rgba(189,240,255,.15); border-top-color:var(--neon); border-radius:50%; animation:spin 1s linear infinite; box-shadow:0 0 16px rgba(76,195,255,.35); }
   @keyframes spin { to { transform:rotate(360deg); } }
-  .dot { width:64px; height:64px; margin:0 auto; border-radius:50%; background:var(--gold); box-shadow:0 0 40px var(--gold); animation:pulse 1.4s ease-in-out infinite; }
-  @keyframes pulse { 50% { transform:scale(.85); opacity:.7; } }
+  .dot { width:84px; height:84px; margin:0 auto; background:url(assets/yeomyeong.png) center/contain no-repeat; filter:drop-shadow(0 0 18px rgba(160,225,255,.9)); animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform:scale(.88); opacity:.75; } }
+  .done { width:70px; height:64px; margin:0 auto; }
+  .done .heart { width:70px; height:64px; display:block; }
   .err { color:var(--red); font-size:14px; margin-top:10px; min-height:20px; text-align:center; }
+  .foot { display:flex; justify-content:center; padding-top:14px; }
+  .foot img { height:18px; opacity:.85; }
   .mode { position:fixed; right:10px; bottom:6px; font-size:10px; color:rgba(255,255,255,.35); z-index:9; }
 </style>
 </head>
@@ -57,7 +94,8 @@
 
 <!-- 1. 안내·동의 -->
 <section id="s-intro" class="screen bg on">
-  <div class="label">2027 우리 새해 방명록</div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hero"><div class="fr"></div><div class="hand">새해 복 많이 받으세요<svg class="heart" viewBox="0 0 100 92"><path d="M50 86 C22 64 6 48 6 28 C6 14 17 4 30 4 C40 4 47 10 50 18 C53 10 60 4 70 4 C83 4 94 14 94 28 C94 48 78 64 50 86 Z"/></svg></div></div>
   <h1>10초 새해 인사가<br>외벽에 표출됩니다</h1>
   <p>내 폰으로 셀피 영상을 찍어 보내면, 검수 후 서예박물관 외벽에 나와요. 앱 설치는 필요 없어요.</p>
   <div class="grow"></div>
@@ -69,6 +107,7 @@
 
 <!-- 2. 새해 한마디 -->
 <section id="s-msg" class="screen bg">
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
   <div class="label">STEP 1 / 2</div>
   <h1>새해 한마디를<br>적어주세요</h1>
   <p>영상과 함께 외벽에 표시돼요.</p>
@@ -80,8 +119,9 @@
   </div>
   <input type="text" id="msg" maxlength="20" placeholder="최대 20자" autocomplete="off">
   <div class="count"><span id="cnt">0</span> / 20</div>
+  <div class="msgPrev hand" id="msgPrev"></div>
   <div class="grow"></div>
-  <button class="btn" id="b-msg" disabled>다음 · 촬영하기</button>
+  <button class="btn" id="b-msg" disabled>다음 · 촬영하기 (STEP 2)</button>
 </section>
 
 <!-- 3. 촬영 -->
@@ -89,9 +129,10 @@
   <div class="stage">
     <video id="live" playsinline muted autoplay></video>
     <div class="frame"></div>
-    <div class="ovTop">2027 우리 새해 방명록</div>
+    <div class="ovTop"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+    <div class="hint" id="hint">얼굴을 액자 가운데에 맞추고 버튼을 눌러주세요</div>
     <div class="timer" id="timer"></div>
-    <div class="ovMsg" id="liveMsg"></div>
+    <div class="ovMsg hand" id="liveMsg"></div>
     <div class="bar" id="bar"></div>
     <div class="big" id="big"></div>
     <div class="controls"><button class="rec" id="b-rec" aria-label="녹화"></button></div>
@@ -103,8 +144,8 @@
   <div class="stage">
     <video id="review" playsinline muted autoplay loop></video>
     <div class="frame"></div>
-    <div class="ovTop">미리보기</div>
-    <div class="ovMsg" id="revMsg"></div>
+    <div class="ovTop"><span class="pill">미리보기</span><span class="year">2027</span></div>
+    <div class="ovMsg hand" id="revMsg"></div>
     <div class="controls" style="flex-direction:column">
       <div class="row" style="width:100%">
         <button class="btn ghost" id="b-retake">다시 찍기</button>
@@ -117,7 +158,7 @@
 
 <!-- 5. 전송·대기 -->
 <section id="s-wait" class="screen bg">
-  <div class="label">2027 우리 새해 방명록</div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
   <div class="grow"></div>
   <div class="card">
     <div id="w-icon" class="spinner"></div>
@@ -128,6 +169,7 @@
   <div class="grow"></div>
   <button class="btn" id="b-retry" style="display:none">다시 보내기</button>
   <button class="btn ghost" id="b-again" style="display:none;margin-top:10px">새로 참여하기</button>
+  <div class="foot"><img src="assets/ci_white.png" alt="우리금융그룹"></div>
 </section>
 
 <div class="mode" id="mode"></div>
@@ -307,9 +349,11 @@ function blobToBase64(blob) {
 
 
 const $ = (id) => document.getElementById(id);
+const HEART = '<svg class="heart" viewBox="0 0 100 92"><path d="M50 86 C22 64 6 48 6 28 C6 14 17 4 30 4 C40 4 47 10 50 18 C53 10 60 4 70 4 C83 4 94 14 94 28 C94 48 78 64 50 86 Z"/></svg>';
+const hand = (el, t) => { el.textContent = t; if (t) el.insertAdjacentHTML('beforeend', HEART); };
 const show = (id) => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
 if (!Relay) {
-  document.body.innerHTML = '<section class="screen bg on"><div class="label">2027 우리 새해 방명록</div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
+  document.body.innerHTML = '<section class="screen bg on"><div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
   throw new Error('no relay');
 }
 $('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
@@ -324,7 +368,7 @@ $('b-start').onclick = () => show('s-msg');
 
 // ---- 2. 한마디
 const msgEl = $('msg');
-const syncMsg = () => { $('cnt').textContent = msgEl.value.length; $('b-msg').disabled = !msgEl.value.trim(); };
+const syncMsg = () => { $('cnt').textContent = msgEl.value.length; $('b-msg').disabled = !msgEl.value.trim(); hand($('msgPrev'), msgEl.value.trim()); };
 msgEl.oninput = syncMsg;
 document.querySelectorAll('.chip').forEach(c => c.onclick = () => { msgEl.value = c.textContent; syncMsg(); });
 $('b-msg').onclick = async () => { message = msgEl.value.trim(); await openCamera(); };
@@ -339,7 +383,7 @@ async function openCamera() {
     stream = stream || await navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'user', width: { ideal: 540 }, height: { ideal: 960 }, frameRate: { ideal: 30 } }, audio: false });
     $('live').srcObject = stream;
-    $('liveMsg').textContent = message;
+    hand($('liveMsg'), message); $('hint').style.display = '';
     $('timer').textContent = '';
     show('s-cam');
   } catch (e) {
@@ -348,6 +392,7 @@ async function openCamera() {
 }
 $('b-rec').onclick = async () => {
   if (recorder && recorder.state === 'recording') return;
+  $('hint').style.display = 'none';
   for (const n of [3, 2, 1]) { $('big').textContent = n; await sleep(800); }
   $('big').textContent = '';
   startRecording();
@@ -365,7 +410,7 @@ function startRecording() {
     recBlob = new Blob(chunks, { type: recMime });
     const url = URL.createObjectURL(recBlob);
     $('review').src = url;
-    $('revMsg').textContent = message;
+    hand($('revMsg'), message);
     const a = $('save'); a.href = url; a.download = 'woori-newyear' + (recMime.includes('mp4') ? '.mp4' : '.webm');
     $('b-rec').classList.remove('on');
     show('s-review');
@@ -419,7 +464,7 @@ function watch(id) {
       if (s.status === 'pending') setWait('spinner', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.');
       else if (s.status === 'approved') setWait('spinner', `송출 대기 ${s.position}번째`, `예상 약 ${Math.max(1, Math.ceil(s.position * 20 / 2 / 60))}분 후 서예박물관 외벽에 나와요.`);
       else if (s.status === 'playing') setWait('dot', '지금 외벽에 나오고 있어요!', `서예박물관 ${sideTxt} 벽을 봐주세요 ✨`);
-      else if (s.status === 'played') { done('송출 완료', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.'); }
+      else if (s.status === 'played') { done('송출 완료', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.', 'heart'); }
       else if (s.status === 'rejected') { done('송출되지 않았어요', '검수 기준에 맞지 않아 영상이 파기되었어요. 다시 참여해 주세요.'); }
     } catch (e) {
       if (/없음/.test(e.message)) { done('접수 기록을 찾을 수 없어요', '처음부터 다시 참여해 주세요.'); return; }
@@ -434,16 +479,17 @@ function watch(id) {
   watch.check = check;
   pollTimer = setInterval(check, watch.live ? 5000 : 3000);
 }
-function done(title, desc) {
+function done(title, desc, icon = '') {
   clearInterval(pollTimer);
   watch.check = null; // 실시간 알림이 와도 더 이상 확인하지 않음
   localStorage.removeItem('woori-gb');
   $('w-err').textContent = '';
-  setWait('', title, desc);
+  setWait(icon, title, desc);
   $('b-again').style.display = 'block';
 }
 function setWait(icon, state, desc) {
-  $('w-icon').className = icon; $('w-state').textContent = state; $('w-desc').textContent = desc;
+  const ic = $('w-icon'); ic.className = icon === 'heart' ? 'done' : icon; ic.innerHTML = icon === 'heart' ? HEART : '';
+  $('w-state').textContent = state; $('w-desc').textContent = desc;
 }
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
