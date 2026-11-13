@@ -1,5 +1,11 @@
 # 「우리 새해 방명록」 데모 — 설치·실행 안내
 
+> **현재 기본 중간지점: Supabase** (서울 리전, 실시간 알림). `supabase_setup.sql`로 테이블·저장소·권한 설정.
+> - 폰: `mobile.html` (키 불필요)
+> - 콘솔·송출: `console.html?key=스태프키`, `game.html?key=스태프키` — 스태프 키는 Supabase SQL `select v from app_secret where k='staff_key'`
+> - Apps Script 중간지점을 쓰려면 기존처럼 `?api=웹앱URL`을 붙이면 됩니다(우선 적용).
+
+
 ## 구성
 | 파일 | 어디서 | 역할 |
 |---|---|---|

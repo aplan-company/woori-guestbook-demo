@@ -37,15 +37,86 @@
 </header>
 <main id="list"><div class="empty">검수 대기 중인 영상이 없어요</div></main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
+const SB_URL = 'https://jmsnadveqmduzprrevlb.supabase.co';  // Supabase 프로젝트 URL
+const SB_KEY = 'sb_publishable_5tBAE0E6yw9PGkGmeXj0Yw_LMEVIMPw';  // 공개용(publishable) 키 — RLS로 보호되므로 코드에 넣어도 됨
 // ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
 // ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
+// 우선순위: ?api=(Apps Script) → Supabase(SB_URL·SB_KEY 설정 시) → 로컬 데모(localhost 또는 ?local)
 const QS = new URLSearchParams(location.search);
 const API = QS.get('api') || ENDPOINT;
+const STAFF_KEY = QS.get('key') || '';   // 콘솔·송출 PC 전용 (승인·반려·송출 권한)
 const LOCAL_OK = QS.has('local') || location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
-const Relay = API ? gasRelay(API) : (LOCAL_OK ? localRelay() : null);
-const RELAY_KEY = API || 'local'; // 접수 기록이 어느 중간지점 것인지 구분
+const USE_SB = !API && !QS.has('local') && typeof SB_URL !== 'undefined' && SB_URL && SB_KEY && window.supabase;
+const Relay = API ? gasRelay(API) : USE_SB ? supabaseRelay(SB_URL, SB_KEY, STAFF_KEY) : (LOCAL_OK ? localRelay() : null);
+const RELAY_KEY = API || (USE_SB ? SB_URL : 'local'); // 접수 기록이 어느 중간지점 것인지 구분
+
+function supabaseRelay(url, key, staffKey) {
+  const sb = window.supabase.createClient(url, key, { auth: { persistSession: false } });
+  const BUCKET = 'guestbook';
+  const paths = new Map(); // id → 저장소 경로 (목록 조회 때 기억)
+  const toItem = (r) => ({ id: r.id, createdAt: Date.parse(r.created_at), status: r.status, mime: r.mime,
+    message: r.message || '', side: r.side || '' });
+  const fail = (e, fallback) => { throw new Error((e && e.message) || fallback || '요청 실패'); };
+  return {
+    mode: 'supabase',
+    async upload(blob, mime, message) {
+      const ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+      const path = 'v/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
+      const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType: mime, upsert: false });
+      if (up.error) fail(up.error, '업로드 실패');
+      const ins = await sb.from('guestbook').insert({ path, mime, message: String(message || '').slice(0, 20) }).select('id').single();
+      if (ins.error) { sb.storage.from(BUCKET).remove([path]); fail(ins.error, '접수 실패'); }
+      return { ok: true, id: ins.data.id };
+    },
+    async list(status) {
+      let q = sb.from('guestbook').select('*').order('created_at');
+      if (status) q = q.in('status', String(status).split(','));
+      const { data, error } = await q;
+      if (error) fail(error);
+      data.forEach(r => { if (r.path) paths.set(r.id, r.path); });
+      return data.map(toItem);
+    },
+    async getFile(id) {
+      let path = paths.get(id);
+      if (!path) {
+        const { data } = await sb.from('guestbook').select('path').eq('id', id).maybeSingle();
+        path = data && data.path;
+      }
+      if (!path) throw new Error('파일 없음(이미 파기됨)');
+      const r = await fetch(sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl, { cache: 'no-store' });
+      if (!r.ok) throw new Error('파일 없음(이미 파기됨)');
+      return r.blob();
+    },
+    async setStatus(id, status, side = '') {
+      const { data, error } = await sb.rpc('staff_set_status', { p_key: staffKey, p_id: id, p_status: status, p_side: side });
+      if (error) fail(error);
+      if (data) { paths.delete(id); await sb.storage.from(BUCKET).remove([data]); } // 즉시 파기
+      return { ok: true };
+    },
+    async status(id) {
+      const { data, error } = await sb.from('guestbook').select('id,status,side,created_at').eq('id', id).maybeSingle();
+      if (error) fail(error);
+      if (!data) throw new Error('없음');
+      let position = 0;
+      if (data.status === 'approved') {
+        const c = await sb.from('guestbook').select('id', { count: 'exact', head: true })
+          .eq('status', 'approved').lt('created_at', data.created_at);
+        position = (c.count || 0) + 1;
+      }
+      return { ok: true, status: data.status, position, side: data.side };
+    },
+    // 새 접수·상태 변경이 생기면 즉시 호출 (폴링 대신)
+    subscribe(cb) {
+      sb.channel('guestbook-' + Math.random().toString(36).slice(2))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'guestbook' }, () => cb())
+        .subscribe();
+      return true;
+    },
+  };
+}
 
 function gasRelay(url) {
   const timeoutFetch = (u, opt = {}, ms = 60000) => {
@@ -142,12 +213,12 @@ function blobToBase64(blob) {
 
 if (!Relay) { document.body.innerHTML = '<p style="color:#fff;font:20px sans-serif;padding:40px">연결 정보가 없어요. 주소 뒤에 ?api=웹앱URL 을 붙여 열어주세요. (같은 PC 테스트는 ?local)</p>'; throw new Error('no relay'); }
 const list = document.getElementById('list');
-document.getElementById('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : 'Apps Script 연결';
+document.getElementById('mode').textContent = { local: '로컬 데모 모드', 'apps-script': 'Apps Script 연결', supabase: 'Supabase 연결' }[Relay.mode];
 const cards = new Map(); // id → {el, url}
-let busy = false;
+let busy = false, again = false;
 
 async function refresh() {
-  if (busy) return;
+  if (busy) { again = true; return; }
   busy = true;
   try {
     const items = await Relay.list('pending,approved');
@@ -160,6 +231,7 @@ async function refresh() {
     updateFocus();
   } catch (e) { console.warn(e); }
   busy = false;
+  if (again) { again = false; refresh(); }
 }
 
 function addCard(p) {
@@ -203,7 +275,8 @@ document.addEventListener('keydown', e => {
 });
 
 refresh();
-setInterval(refresh, 1500);
+const live = Relay.subscribe ? Relay.subscribe(refresh) : false; // 실시간 알림 지원 시 즉시 갱신
+setInterval(refresh, live ? 5000 : 1500);
 </script>
 </body>
 </html>

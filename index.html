@@ -13,5 +13,5 @@ a b{display:block;font-size:18px}a span{color:#A9C1DD;font-size:13px}a:hover{bac
 <a href="console.html"><b>✅ Console</b><span>검수 PC — A 승인 / R 반려</span></a>
 <a href="game.html"><b>🖥 Game</b><span>송출 PC — 좌·우 외벽 표출 (F 전체화면 · D 상태)</span></a>
 </div>
-<script>document.querySelectorAll("a").forEach(a=>a.href+=location.search);</script>
+<script>document.querySelectorAll("a").forEach(a=>{ if(!/mobile/.test(a.href)) a.href+=location.search; });</script>
 </body></html>
