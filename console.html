@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>검수 콘솔 · 우리 새해 방명록</title>
+<style>
+  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; --red:#E5484D; --green:#2EB872; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#0e1a2b; color:#e8eef6; font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  header { display:flex; align-items:center; gap:20px; padding:14px 22px; background:var(--navy); position:sticky; top:0; z-index:2; }
+  header h1 { font-size:18px; margin:0; }
+  .stat { font-size:14px; color:#a9c1dd; }
+  .stat b { color:#fff; font-size:18px; margin-left:4px; }
+  .help { margin-left:auto; font-size:13px; color:#a9c1dd; }
+  kbd { background:#24395a; border-radius:4px; padding:2px 7px; color:#fff; }
+  main { padding:20px 22px; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+  .card { background:#16263d; border-radius:14px; overflow:hidden; border:3px solid transparent; }
+  .card.focus { border-color:var(--gold); }
+  .card video { width:100%; aspect-ratio:9/16; object-fit:cover; background:#000; display:block; transform:scaleX(-1); }
+  .meta { padding:10px 12px; }
+  .msg { font-size:16px; font-weight:700; min-height:22px; }
+  .time { font-size:12px; color:#8aa2c0; margin-top:3px; }
+  .acts { display:flex; gap:8px; padding:0 12px 12px; }
+  .acts button { flex:1; border:0; border-radius:10px; padding:11px; font-size:15px; font-weight:700; color:#fff; cursor:pointer; }
+  .ok { background:var(--green); } .no { background:var(--red); }
+  .empty { grid-column:1/-1; text-align:center; color:#6f86a6; padding:80px 0; font-size:16px; }
+  .mode { font-size:12px; color:#6f86a6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>검수 콘솔</h1>
+  <span class="stat">검수 대기<b id="n-pending">0</b></span>
+  <span class="stat">송출 대기<b id="n-approved">0</b></span>
+  <span class="mode" id="mode"></span>
+  <span class="help">맨 앞 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
+</header>
+<main id="list"><div class="empty">검수 대기 중인 영상이 없어요</div></main>
+
+<script>
+const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
+// ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
+// ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
+const API = new URLSearchParams(location.search).get('api') || ENDPOINT;
+const Relay = API ? gasRelay(API) : localRelay();
+
+function gasRelay(url) {
+  const timeoutFetch = (u, opt = {}, ms = 60000) => {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
+    return fetch(u, { ...opt, signal: ac.signal }).finally(() => clearTimeout(t));
+  };
+  const get = async (params) => {
+    const r = await timeoutFetch(url + '?' + new URLSearchParams(params));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  // Content-Type text/plain = 사전요청(preflight) 없는 단순 요청 → Apps Script와 호환
+  const post = async (body) => {
+    const r = await timeoutFetch(url, { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  return {
+    mode: 'apps-script',
+    async upload(blob, mime, message) {
+      const data = await blobToBase64(blob);
+      return post({ action: 'upload', mime, message, data });
+    },
+    async list(status) { return (await get({ action: 'list', status })).items; },
+    async getFile(id) {
+      const j = await get({ action: 'file', id });
+      return (await fetch(`data:${j.mime};base64,${j.data}`)).blob();
+    },
+    setStatus(id, status, side = '') { return post({ action: 'setStatus', id, status, side }); },
+    status(id) { return get({ action: 'status', id }); },
+  };
+}
+
+function localRelay() {
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('woori-guestbook-demo', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('items', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const rq = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const store = async (mode) => (await dbp).transaction('items', mode).objectStore('items');
+  const all = async () => rq((await store('readonly')).getAll());
+  return {
+    mode: 'local',
+    async upload(blob, mime, message) {
+      const id = Math.random().toString(36).slice(2, 10);
+      const now = Date.now();
+      await rq((await store('readwrite')).put({ id, createdAt: now, status: 'pending', blob, mime, message: String(message || '').slice(0, 20), side: '', updatedAt: now }));
+      return { ok: true, id };
+    },
+    async list(status) {
+      return (await all()).filter(x => !status || x.status === status)
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .map(({ blob, ...rest }) => rest);
+    },
+    async getFile(id) {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it || !it.blob) throw new Error('파일 없음(이미 파기됨)');
+      return it.blob;
+    },
+    async setStatus(id, status, side = '') {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it) return { ok: false };
+      it.status = status; it.updatedAt = Date.now();
+      if (side) it.side = side;
+      if (status === 'rejected' || status === 'played') { delete it.blob; it.message = ''; } // 즉시 파기
+      await rq((await store('readwrite')).put(it));
+      return { ok: true };
+    },
+    async status(id) {
+      const items = await all();
+      const me = items.find(x => x.id === id);
+      if (!me) throw new Error('없음');
+      const position = me.status === 'approved'
+        ? items.filter(x => x.status === 'approved' && x.createdAt < me.createdAt).length + 1 : 0;
+      return { ok: true, status: me.status, position, side: me.side };
+    },
+  };
+}
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1]);
+    fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+
+
+const list = document.getElementById('list');
+document.getElementById('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : 'Apps Script 연결';
+const cards = new Map(); // id → {el, url}
+let busy = false;
+
+async function refresh() {
+  if (busy) return;
+  busy = true;
+  try {
+    const [pending, approved] = await Promise.all([Relay.list('pending'), Relay.list('approved')]);
+    document.getElementById('n-pending').textContent = pending.length;
+    document.getElementById('n-approved').textContent = approved.length;
+    const ids = new Set(pending.map(p => p.id));
+    for (const [id, c] of cards) if (!ids.has(id)) removeCard(id);
+    for (const p of pending) if (!cards.has(p.id)) addCard(p);
+    updateFocus();
+  } catch (e) { console.warn(e); }
+  busy = false;
+}
+
+function addCard(p) {
+  list.querySelector('.empty')?.remove();
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `<video muted loop playsinline autoplay></video>
+    <div class="meta"><div class="msg"></div><div class="time">${new Date(p.createdAt).toLocaleTimeString('ko-KR')} · #${p.id}</div></div>
+    <div class="acts"><button class="ok">승인</button><button class="no">반려</button></div>`;
+  el.querySelector('.msg').textContent = p.message || '(문구 없음)';
+  el.querySelector('.ok').onclick = () => decide(p.id, 'approved');
+  el.querySelector('.no').onclick = () => decide(p.id, 'rejected');
+  list.appendChild(el);
+  const c = { el, url: '' };
+  cards.set(p.id, c);
+  Relay.getFile(p.id).then(blob => {
+    c.url = URL.createObjectURL(blob);
+    el.querySelector('video').src = c.url;
+  }).catch(() => { el.querySelector('.time').textContent += ' · 영상 불러오기 실패'; });
+}
+function removeCard(id) {
+  const c = cards.get(id); if (!c) return;
+  if (c.url) URL.revokeObjectURL(c.url);
+  c.el.remove(); cards.delete(id);
+  if (!cards.size) list.innerHTML = '<div class="empty">검수 대기 중인 영상이 없어요</div>';
+}
+function updateFocus() {
+  let first = true;
+  for (const c of cards.values()) { c.el.classList.toggle('focus', first); first = false; }
+}
+async function decide(id, status) {
+  removeCard(id); updateFocus();
+  try { await Relay.setStatus(id, status); } catch (e) { alert('처리 실패: ' + e.message); }
+  refresh();
+}
+document.addEventListener('keydown', e => {
+  const first = cards.keys().next().value;
+  if (!first) return;
+  if (e.key === 'a' || e.key === 'A') decide(first, 'approved');
+  if (e.key === 'r' || e.key === 'R') decide(first, 'rejected');
+});
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>송출 · 우리 새해 방명록</title>
+<style>
+  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; }
+  html,body { margin:0; height:100%; background:#000; overflow:hidden; cursor:none;
+    font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  #stage { position:absolute; left:0; top:0; transform-origin:0 0; display:flex; }
+  .panel { position:relative; overflow:hidden; color:#fff;
+    background: radial-gradient(90% 60% at 50% 18%, #1b5592 0%, var(--navy) 55%, #050d1a 100%); }
+  .panel::before { content:""; position:absolute; inset:0; opacity:.55;
+    background-image: radial-gradient(2px 2px at 20% 30%, #fff8 50%, transparent 51%), radial-gradient(2px 2px at 70% 12%, #fff6 50%, transparent 51%),
+      radial-gradient(3px 3px at 82% 64%, #e3c35a99 50%, transparent 51%), radial-gradient(2px 2px at 35% 80%, #fff5 50%, transparent 51%),
+      radial-gradient(2px 2px at 55% 45%, #45a9fe99 50%, transparent 51%);
+    background-size: 600px 600px; animation: drift 40s linear infinite; }
+  @keyframes drift { to { background-position: 0 -600px; } }
+  .top { position:absolute; top:7%; width:100%; text-align:center; font-weight:800; letter-spacing:.12em; color:var(--gold); }
+  .frame { position:absolute; left:50%; top:14%; transform:translateX(-50%) scale(.92); opacity:0;
+    border-radius:48px; overflow:hidden; box-shadow:0 0 0 6px rgba(227,195,90,.85), 0 0 80px rgba(69,169,254,.45);
+    transition: transform .9s cubic-bezier(.2,.8,.2,1), opacity .9s; }
+  .panel.live .frame { transform:translateX(-50%) scale(1); opacity:1; }
+  .frame video { width:100%; height:100%; object-fit:cover; display:block; transform:scaleX(-1); background:#000; }
+  .msg { position:absolute; width:86%; left:7%; text-align:center; font-weight:900; line-height:1.2;
+    text-shadow:0 4px 24px rgba(0,0,0,.6); opacity:0; transform:translateY(30px); transition:.9s .25s; word-break:keep-all; }
+  .panel.live .msg { opacity:1; transform:none; }
+  .slogan { position:absolute; bottom:5%; width:100%; text-align:center; font-weight:900; color:var(--sky); letter-spacing:.02em; }
+  .idle { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    transition:opacity .8s; }
+  .panel.live .idle { opacity:0; }
+  .sun { border-radius:50%; background:radial-gradient(circle, #fff6d6 0%, var(--gold) 45%, rgba(227,195,90,0) 70%); animation:breathe 4s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform:scale(1.12); opacity:.8; } }
+  .idle .t1 { font-weight:900; margin-top:6%; }
+  .idle .t2 { color:#a9c1dd; margin-top:2%; }
+  #hud { position:fixed; left:10px; bottom:8px; color:#7fa; font:12px/1.4 monospace; background:#000a; padding:6px 10px; display:none; white-space:pre; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hud"></div>
+
+<script>
+const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
+// ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
+// ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
+const API = new URLSearchParams(location.search).get('api') || ENDPOINT;
+const Relay = API ? gasRelay(API) : localRelay();
+
+function gasRelay(url) {
+  const timeoutFetch = (u, opt = {}, ms = 60000) => {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
+    return fetch(u, { ...opt, signal: ac.signal }).finally(() => clearTimeout(t));
+  };
+  const get = async (params) => {
+    const r = await timeoutFetch(url + '?' + new URLSearchParams(params));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  // Content-Type text/plain = 사전요청(preflight) 없는 단순 요청 → Apps Script와 호환
+  const post = async (body) => {
+    const r = await timeoutFetch(url, { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  return {
+    mode: 'apps-script',
+    async upload(blob, mime, message) {
+      const data = await blobToBase64(blob);
+      return post({ action: 'upload', mime, message, data });
+    },
+    async list(status) { return (await get({ action: 'list', status })).items; },
+    async getFile(id) {
+      const j = await get({ action: 'file', id });
+      return (await fetch(`data:${j.mime};base64,${j.data}`)).blob();
+    },
+    setStatus(id, status, side = '') { return post({ action: 'setStatus', id, status, side }); },
+    status(id) { return get({ action: 'status', id }); },
+  };
+}
+
+function localRelay() {
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('woori-guestbook-demo', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('items', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const rq = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const store = async (mode) => (await dbp).transaction('items', mode).objectStore('items');
+  const all = async () => rq((await store('readonly')).getAll());
+  return {
+    mode: 'local',
+    async upload(blob, mime, message) {
+      const id = Math.random().toString(36).slice(2, 10);
+      const now = Date.now();
+      await rq((await store('readwrite')).put({ id, createdAt: now, status: 'pending', blob, mime, message: String(message || '').slice(0, 20), side: '', updatedAt: now }));
+      return { ok: true, id };
+    },
+    async list(status) {
+      return (await all()).filter(x => !status || x.status === status)
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .map(({ blob, ...rest }) => rest);
+    },
+    async getFile(id) {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it || !it.blob) throw new Error('파일 없음(이미 파기됨)');
+      return it.blob;
+    },
+    async setStatus(id, status, side = '') {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it) return { ok: false };
+      it.status = status; it.updatedAt = Date.now();
+      if (side) it.side = side;
+      if (status === 'rejected' || status === 'played') { delete it.blob; it.message = ''; } // 즉시 파기
+      await rq((await store('readwrite')).put(it));
+      return { ok: true };
+    },
+    async status(id) {
+      const items = await all();
+      const me = items.find(x => x.id === id);
+      if (!me) throw new Error('없음');
+      const position = me.status === 'approved'
+        ? items.filter(x => x.status === 'approved' && x.createdAt < me.createdAt).length + 1 : 0;
+      return { ok: true, status: me.status, position, side: me.side };
+    },
+  };
+}
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1]);
+    fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+
+
+// ===== 송출 설정 =====
+const PANEL_W = 1080, PANEL_H = 1920;   // 벽 한 면 해상도 (MadMapper에서 좌/우로 잘라 매핑)
+const SIDES = ['L', 'R'];               // 서예박물관 좌·우 외벽
+const LOOPS = 2;                        // 한 영상 반복 횟수 (10초 × 2)
+const POLL_MS = 2000;
+const PRELOAD = 3;                      // 미리 받아둘 영상 수
+
+const stage = document.getElementById('stage');
+stage.style.width = PANEL_W * SIDES.length + 'px';
+stage.style.height = PANEL_H + 'px';
+const S = PANEL_W / 1080; // 글자 크기 기준 배율
+
+const panels = SIDES.map(side => {
+  const el = document.createElement('div');
+  el.className = 'panel';
+  el.style.width = PANEL_W + 'px'; el.style.height = PANEL_H + 'px';
+  el.innerHTML = `
+    <div class="top" style="font-size:${34*S}px">2027 우리 새해 방명록</div>
+    <div class="idle">
+      <div class="sun" style="width:${360*S}px;height:${360*S}px"></div>
+      <div class="t1" style="font-size:${64*S}px">새해 인사를 남겨주세요</div>
+      <div class="t2" style="font-size:${34*S}px">광장의 QR을 찍으면<br>이 벽에 내 영상이 나와요</div>
+    </div>
+    <div class="frame" style="width:${860*S}px;height:${1150*S}px"><video muted playsinline></video></div>
+    <div class="msg" style="top:${14 + 1150/1920*100 + 3}%;font-size:${76*S}px"></div>
+    <div class="slogan" style="font-size:${56*S}px">새해, 우리는 해</div>`;
+  stage.appendChild(el);
+  return { side, el, video: el.querySelector('video'), msg: el.querySelector('.msg'), busy: false, item: null };
+});
+
+function fit() {
+  const sc = Math.min(innerWidth / (PANEL_W * SIDES.length), innerHeight / PANEL_H);
+  stage.style.transform = `translate(${(innerWidth - PANEL_W * SIDES.length * sc) / 2}px, ${(innerHeight - PANEL_H * sc) / 2}px) scale(${sc})`;
+}
+addEventListener('resize', fit); fit();
+
+// ===== 대기열 =====
+const queue = [];          // 승인된 항목 {id, message}
+const seen = new Set();    // 이미 큐에 넣었거나 송출한 id
+const ready = new Map();   // id → objectURL (미리 받은 영상)
+let paused = false, played = 0, lastErr = '';
+
+async function poll() {
+  if (paused) return;
+  try {
+    const items = await Relay.list('approved');
+    for (const it of items) if (!seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+    lastErr = '';
+  } catch (e) { lastErr = e.message; }
+  preload();
+  schedule();
+}
+
+async function preload() {
+  for (const it of queue.slice(0, PRELOAD)) {
+    if (ready.has(it.id) || it.loading) continue;
+    it.loading = true;
+    try { ready.set(it.id, URL.createObjectURL(await Relay.getFile(it.id))); }
+    catch (e) { // 파일이 없으면(이미 파기 등) 건너뜀
+      queue.splice(queue.indexOf(it), 1); lastErr = e.message;
+    }
+    it.loading = false;
+    schedule();
+  }
+}
+
+function schedule() {
+  if (paused) return;
+  for (const p of panels) {
+    if (p.busy) continue;
+    const it = queue.find(x => ready.has(x.id));
+    if (!it) return;
+    queue.splice(queue.indexOf(it), 1);
+    play(p, it);
+  }
+}
+
+function play(p, it) {
+  p.busy = true; p.item = it;
+  const url = ready.get(it.id); ready.delete(it.id);
+  let count = 0;
+  p.msg.textContent = it.message || '';
+  p.video.src = url;
+  const start = () => p.video.play().catch(() => {});
+  p.video.onloadeddata = () => { p.el.classList.add('live'); start(); };
+  p.video.onended = () => { count++; if (count < LOOPS) { p.video.currentTime = 0; start(); } else finish(); };
+  const guard = setTimeout(finish, 15000 * LOOPS); // 재생 오류 대비 안전장치
+  Relay.setStatus(it.id, 'playing', p.side).catch(() => {});
+  let doneOnce = false;
+  function finish() {
+    if (doneOnce) return; doneOnce = true;
+    clearTimeout(guard);
+    p.el.classList.remove('live');
+    Relay.setStatus(it.id, 'played', p.side).catch(() => {}); // → 중간지점에서 즉시 파기
+    played++;
+    setTimeout(() => {
+      p.video.removeAttribute('src'); p.video.load();
+      URL.revokeObjectURL(url);
+      p.busy = false; p.item = null;
+      schedule();
+    }, 900);
+  }
+  preload();
+}
+
+// ===== 단축키: F 전체화면 · D 상태표시 · P 일시정지(브랜딩 영상 구간 등) =====
+const hud = document.getElementById('hud');
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  if (k === 'd') hud.style.display = hud.style.display === 'block' ? 'none' : 'block';
+  if (k === 'p') { paused = !paused; if (!paused) poll(); }
+});
+setInterval(() => {
+  hud.textContent = `mode: ${Relay.mode}${paused ? '  [일시정지]' : ''}\nqueue: ${queue.length}  ready: ${ready.size}  played: ${played}\n` +
+    panels.map(p => `${p.side}: ${p.item ? '#' + p.item.id : '-'}`).join('  ') + (lastErr ? `\nerr: ${lastErr}` : '');
+}, 500);
+
+poll();
+setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>

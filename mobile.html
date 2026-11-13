@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>2027 우리 새해 방명록</title>
+<style>
+  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; --ink:#fff; --muted:#A9C1DD; --red:#FF6B6B; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:var(--navy); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
+  body { overflow:hidden; }
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; padding:calc(24px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
+  .screen.on { display:flex; }
+  .bg { background: radial-gradient(120% 80% at 50% 0%, #15457a 0%, var(--navy) 60%); }
+  .label { color:var(--gold); font-size:13px; font-weight:700; letter-spacing:.08em; }
+  h1 { font-size:30px; line-height:1.25; margin:10px 0 12px; }
+  p { color:var(--muted); font-size:15px; line-height:1.55; margin:0 0 10px; }
+  .grow { flex:1; }
+  .btn { width:100%; border:0; border-radius:16px; padding:17px; font-size:17px; font-weight:700; color:#fff; background:var(--blue); }
+  .btn:disabled { opacity:.35; }
+  .btn.ghost { background:rgba(255,255,255,.1); }
+  .btn.gold { background:var(--gold); color:var(--navy); }
+  .row { display:flex; gap:10px; }
+  .check { display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,.06); border-radius:14px; padding:14px; margin-bottom:10px; font-size:14px; line-height:1.5; color:#dce8f5; }
+  .check input { width:22px; height:22px; margin:1px 0 0; accent-color:var(--sky); flex:none; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 16px; }
+  .chip { border:1px solid rgba(255,255,255,.25); background:transparent; color:#fff; border-radius:999px; padding:9px 14px; font-size:14px; }
+  input[type=text] { width:100%; font-size:20px; padding:16px; border-radius:14px; border:2px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; outline:none; }
+  input[type=text]:focus { border-color:var(--sky); }
+  .count { text-align:right; color:var(--muted); font-size:13px; margin-top:6px; }
+  /* 카메라 */
+  #s-cam, #s-review { padding:0; background:#000; }
+  .stage { position:relative; flex:1; overflow:hidden; }
+  .stage video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  .frame { position:absolute; inset:14px; border:3px solid rgba(227,195,90,.85); border-radius:26px; pointer-events:none; }
+  .ovTop { position:absolute; top:calc(26px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-weight:800; color:var(--gold); text-shadow:0 2px 8px rgba(0,0,0,.6); font-size:14px; letter-spacing:.08em; }
+  .ovMsg { position:absolute; bottom:150px; left:20px; right:20px; text-align:center; font-size:28px; font-weight:800; text-shadow:0 2px 14px rgba(0,0,0,.8); }
+  .bar { position:absolute; top:0; left:0; height:6px; background:var(--red); width:0; }
+  .controls { position:absolute; left:0; right:0; bottom:0; padding:18px 22px calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; align-items:center; gap:12px; background:linear-gradient(transparent, rgba(0,0,0,.65)); }
+  .rec { width:78px; height:78px; border-radius:50%; border:5px solid #fff; background:var(--red); }
+  .rec.on { border-radius:22px; transform:scale(.8); transition:.2s; }
+  .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:120px; font-weight:900; color:#fff; text-shadow:0 4px 30px rgba(0,0,0,.6); pointer-events:none; }
+  .timer { position:absolute; top:calc(54px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:18px; font-weight:800; color:#fff; }
+  /* 대기 */
+  .card { background:rgba(255,255,255,.07); border-radius:20px; padding:24px 20px; text-align:center; }
+  .state { font-size:24px; font-weight:800; margin:12px 0 8px; }
+  .spinner { width:46px; height:46px; margin:0 auto; border:5px solid rgba(255,255,255,.15); border-top-color:var(--sky); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .dot { width:64px; height:64px; margin:0 auto; border-radius:50%; background:var(--gold); box-shadow:0 0 40px var(--gold); animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform:scale(.85); opacity:.7; } }
+  .err { color:var(--red); font-size:14px; margin-top:10px; min-height:20px; text-align:center; }
+  .mode { position:fixed; right:10px; bottom:6px; font-size:10px; color:rgba(255,255,255,.35); z-index:9; }
+</style>
+</head>
+<body>
+
+<!-- 1. 안내·동의 -->
+<section id="s-intro" class="screen bg on">
+  <div class="label">2027 우리 새해 방명록</div>
+  <h1>10초 새해 인사가<br>외벽에 표출됩니다</h1>
+  <p>내 폰으로 셀피 영상을 찍어 보내면, 검수 후 서예박물관 외벽에 나와요. 앱 설치는 필요 없어요.</p>
+  <div class="grow"></div>
+  <label class="check"><input type="checkbox" id="c1"><span>내 얼굴이 담긴 영상이 행사장 외벽에 표출되는 것에 동의합니다. 현장 촬영·SNS 게시, 행사 기록물에 포함될 수 있어요.</span></label>
+  <label class="check"><input type="checkbox" id="c2"><span>영상은 <b>송출 직후 즉시 파기</b>되며, 검수 기준에 맞지 않으면 송출되지 않고 바로 파기됩니다.</span></label>
+  <label class="check"><input type="checkbox" id="c3"><span>만 14세 이상입니다. (만 14세 미만은 보호자와 함께 참여해 주세요)</span></label>
+  <button class="btn" id="b-start" disabled>시작하기</button>
+</section>
+
+<!-- 2. 새해 한마디 -->
+<section id="s-msg" class="screen bg">
+  <div class="label">STEP 1 / 2</div>
+  <h1>새해 한마디를<br>적어주세요</h1>
+  <p>영상과 함께 외벽에 표시돼요.</p>
+  <div class="chips">
+    <button class="chip">새해 복 많이 받으세요</button>
+    <button class="chip">우리 가족 건강하자</button>
+    <button class="chip">2027, 우리는 해!</button>
+    <button class="chip">올해도 함께해요</button>
+  </div>
+  <input type="text" id="msg" maxlength="20" placeholder="최대 20자" autocomplete="off">
+  <div class="count"><span id="cnt">0</span> / 20</div>
+  <div class="grow"></div>
+  <button class="btn" id="b-msg" disabled>다음 · 촬영하기</button>
+</section>
+
+<!-- 3. 촬영 -->
+<section id="s-cam" class="screen">
+  <div class="stage">
+    <video id="live" playsinline muted autoplay></video>
+    <div class="frame"></div>
+    <div class="ovTop">2027 우리 새해 방명록</div>
+    <div class="timer" id="timer"></div>
+    <div class="ovMsg" id="liveMsg"></div>
+    <div class="bar" id="bar"></div>
+    <div class="big" id="big"></div>
+    <div class="controls"><button class="rec" id="b-rec" aria-label="녹화"></button></div>
+  </div>
+</section>
+
+<!-- 4. 확인 -->
+<section id="s-review" class="screen">
+  <div class="stage">
+    <video id="review" playsinline muted autoplay loop></video>
+    <div class="frame"></div>
+    <div class="ovTop">미리보기</div>
+    <div class="ovMsg" id="revMsg"></div>
+    <div class="controls" style="flex-direction:column">
+      <div class="row" style="width:100%">
+        <button class="btn ghost" id="b-retake">다시 찍기</button>
+        <button class="btn gold" id="b-send">외벽으로 보내기</button>
+      </div>
+      <a id="save" style="color:#cfe0f2;font-size:13px;margin-top:4px">내 폰에 저장</a>
+    </div>
+  </div>
+</section>
+
+<!-- 5. 전송·대기 -->
+<section id="s-wait" class="screen bg">
+  <div class="label">2027 우리 새해 방명록</div>
+  <div class="grow"></div>
+  <div class="card">
+    <div id="w-icon" class="spinner"></div>
+    <div class="state" id="w-state">전송 중…</div>
+    <p id="w-desc">잠시만 기다려 주세요.</p>
+    <div class="err" id="w-err"></div>
+  </div>
+  <div class="grow"></div>
+  <button class="btn" id="b-retry" style="display:none">다시 보내기</button>
+  <button class="btn ghost" id="b-again" style="display:none;margin-top:10px">새로 참여하기</button>
+</section>
+
+<div class="mode" id="mode"></div>
+
+<script>
+const ENDPOINT = ''; // ← Apps Script 웹 앱 URL 붙여넣기 (비워두면 로컬 데모 모드)
+// ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
+// ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
+const API = new URLSearchParams(location.search).get('api') || ENDPOINT;
+const Relay = API ? gasRelay(API) : localRelay();
+
+function gasRelay(url) {
+  const timeoutFetch = (u, opt = {}, ms = 60000) => {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
+    return fetch(u, { ...opt, signal: ac.signal }).finally(() => clearTimeout(t));
+  };
+  const get = async (params) => {
+    const r = await timeoutFetch(url + '?' + new URLSearchParams(params));
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  // Content-Type text/plain = 사전요청(preflight) 없는 단순 요청 → Apps Script와 호환
+  const post = async (body) => {
+    const r = await timeoutFetch(url, { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || '요청 실패');
+    return j;
+  };
+  return {
+    mode: 'apps-script',
+    async upload(blob, mime, message) {
+      const data = await blobToBase64(blob);
+      return post({ action: 'upload', mime, message, data });
+    },
+    async list(status) { return (await get({ action: 'list', status })).items; },
+    async getFile(id) {
+      const j = await get({ action: 'file', id });
+      return (await fetch(`data:${j.mime};base64,${j.data}`)).blob();
+    },
+    setStatus(id, status, side = '') { return post({ action: 'setStatus', id, status, side }); },
+    status(id) { return get({ action: 'status', id }); },
+  };
+}
+
+function localRelay() {
+  const dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('woori-guestbook-demo', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('items', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const rq = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const store = async (mode) => (await dbp).transaction('items', mode).objectStore('items');
+  const all = async () => rq((await store('readonly')).getAll());
+  return {
+    mode: 'local',
+    async upload(blob, mime, message) {
+      const id = Math.random().toString(36).slice(2, 10);
+      const now = Date.now();
+      await rq((await store('readwrite')).put({ id, createdAt: now, status: 'pending', blob, mime, message: String(message || '').slice(0, 20), side: '', updatedAt: now }));
+      return { ok: true, id };
+    },
+    async list(status) {
+      return (await all()).filter(x => !status || x.status === status)
+        .sort((a, b) => a.createdAt - b.createdAt)
+        .map(({ blob, ...rest }) => rest);
+    },
+    async getFile(id) {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it || !it.blob) throw new Error('파일 없음(이미 파기됨)');
+      return it.blob;
+    },
+    async setStatus(id, status, side = '') {
+      const it = await rq((await store('readonly')).get(id));
+      if (!it) return { ok: false };
+      it.status = status; it.updatedAt = Date.now();
+      if (side) it.side = side;
+      if (status === 'rejected' || status === 'played') { delete it.blob; it.message = ''; } // 즉시 파기
+      await rq((await store('readwrite')).put(it));
+      return { ok: true };
+    },
+    async status(id) {
+      const items = await all();
+      const me = items.find(x => x.id === id);
+      if (!me) throw new Error('없음');
+      const position = me.status === 'approved'
+        ? items.filter(x => x.status === 'approved' && x.createdAt < me.createdAt).length + 1 : 0;
+      return { ok: true, status: me.status, position, side: me.side };
+    },
+  };
+}
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1]);
+    fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+
+
+const $ = (id) => document.getElementById(id);
+const show = (id) => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
+$('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
+
+const REC_SEC = 10;
+let stream = null, recorder = null, chunks = [], recBlob = null, recMime = '', message = '', pollTimer = null;
+
+// ---- 1. 동의
+const checks = ['c1', 'c2', 'c3'].map($);
+checks.forEach(c => c.onchange = () => $('b-start').disabled = !checks.every(x => x.checked));
+$('b-start').onclick = () => show('s-msg');
+
+// ---- 2. 한마디
+const msgEl = $('msg');
+const syncMsg = () => { $('cnt').textContent = msgEl.value.length; $('b-msg').disabled = !msgEl.value.trim(); };
+msgEl.oninput = syncMsg;
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => { msgEl.value = c.textContent; syncMsg(); });
+$('b-msg').onclick = async () => { message = msgEl.value.trim(); await openCamera(); };
+
+// ---- 3. 촬영
+function pickMime() {
+  const list = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  return list.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+async function openCamera() {
+  try {
+    stream = stream || await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 }, frameRate: { ideal: 30 } }, audio: false });
+    $('live').srcObject = stream;
+    $('liveMsg').textContent = message;
+    $('timer').textContent = '';
+    show('s-cam');
+  } catch (e) {
+    alert('카메라를 켤 수 없어요.\n브라우저 설정에서 카메라 권한을 허용해 주세요.\n(카카오톡·네이버 앱 안에서 열었다면 기본 브라우저로 열어주세요)');
+  }
+}
+$('b-rec').onclick = async () => {
+  if (recorder && recorder.state === 'recording') return;
+  for (const n of [3, 2, 1]) { $('big').textContent = n; await sleep(800); }
+  $('big').textContent = '';
+  startRecording();
+};
+function startRecording() {
+  recMime = pickMime();
+  chunks = [];
+  try {
+    recorder = new MediaRecorder(stream, recMime ? { mimeType: recMime, videoBitsPerSecond: 1500000 } : { videoBitsPerSecond: 1500000 });
+  } catch (e) { alert('이 브라우저는 녹화를 지원하지 않아요.'); return; }
+  recMime = (recorder.mimeType || recMime || 'video/webm').split(';')[0];
+  recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    recBlob = new Blob(chunks, { type: recMime });
+    const url = URL.createObjectURL(recBlob);
+    $('review').src = url;
+    $('revMsg').textContent = message;
+    const a = $('save'); a.href = url; a.download = 'woori-newyear' + (recMime.includes('mp4') ? '.mp4' : '.webm');
+    $('b-rec').classList.remove('on');
+    show('s-review');
+  };
+  recorder.start(500);
+  $('b-rec').classList.add('on');
+  const t0 = performance.now();
+  const tick = () => {
+    const el = (performance.now() - t0) / 1000;
+    $('bar').style.width = Math.min(100, el / REC_SEC * 100) + '%';
+    $('timer').textContent = Math.max(0, Math.ceil(REC_SEC - el)) + '초';
+    if (el >= REC_SEC) { recorder.stop(); $('bar').style.width = '0'; $('timer').textContent = ''; return; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ---- 4. 확인
+$('b-retake').onclick = () => { URL.revokeObjectURL($('review').src); recBlob = null; openCamera(); };
+$('b-send').onclick = send;
+
+// ---- 5. 전송·대기
+async function send() {
+  if (!recBlob) return;
+  setWait('spinner', '전송 중…', `영상 ${(recBlob.size / 1024 / 1024).toFixed(1)}MB를 보내고 있어요.`);
+  $('b-retry').style.display = 'none'; $('w-err').textContent = '';
+  show('s-wait');
+  try {
+    const r = await Relay.upload(recBlob, recMime, message);
+    localStorage.setItem('woori-gb-id', r.id);
+    stopCamera();
+    watch(r.id);
+  } catch (e) {
+    setWait('spinner', '전송 실패', '네트워크가 혼잡해요. 잠시 후 다시 보내주세요.');
+    $('w-icon').className = '';
+    $('w-err').textContent = e.message;
+    $('b-retry').style.display = 'block';
+  }
+}
+$('b-retry').onclick = send;
+$('b-again').onclick = () => { localStorage.removeItem('woori-gb-id'); location.reload(); };
+
+function watch(id) {
+  clearInterval(pollTimer);
+  const check = async () => {
+    try {
+      const s = await Relay.status(id);
+      const sideTxt = s.side === 'L' ? '왼쪽' : s.side === 'R' ? '오른쪽' : '';
+      if (s.status === 'pending') setWait('spinner', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.');
+      else if (s.status === 'approved') setWait('spinner', `송출 대기 ${s.position}번째`, `예상 약 ${Math.max(1, Math.ceil(s.position * 20 / 2 / 60))}분 후 서예박물관 외벽에 나와요.`);
+      else if (s.status === 'playing') setWait('dot', '지금 외벽에 나오고 있어요!', `서예박물관 ${sideTxt} 벽을 봐주세요 ✨`);
+      else if (s.status === 'played') { done('송출 완료', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.'); }
+      else if (s.status === 'rejected') { done('송출되지 않았어요', '검수 기준에 맞지 않아 영상이 파기되었어요. 다시 참여해 주세요.'); }
+    } catch (e) { /* 일시 오류는 다음 폴링에서 재시도 */ }
+  };
+  check();
+  pollTimer = setInterval(check, 3000);
+}
+function done(title, desc) {
+  clearInterval(pollTimer);
+  localStorage.removeItem('woori-gb-id');
+  setWait('', title, desc);
+  $('b-again').style.display = 'block';
+}
+function setWait(icon, state, desc) {
+  $('w-icon').className = icon; $('w-state').textContent = state; $('w-desc').textContent = desc;
+}
+function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// 페이지를 닫았다 다시 열어도 대기 화면 복구
+const saved = localStorage.getItem('woori-gb-id');
+if (saved) { show('s-wait'); watch(saved); }
+</script>
+</body>
+</html>
