@@ -136,8 +136,11 @@
 const ENDPOINT = ''; // ← Apps Script 웹 앱 URL 붙여넣기 (비워두면 로컬 데모 모드)
 // ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
 // ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
-const API = new URLSearchParams(location.search).get('api') || ENDPOINT;
-const Relay = API ? gasRelay(API) : localRelay();
+const QS = new URLSearchParams(location.search);
+const API = QS.get('api') || ENDPOINT;
+const LOCAL_OK = QS.has('local') || location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+const Relay = API ? gasRelay(API) : (LOCAL_OK ? localRelay() : null);
+const RELAY_KEY = API || 'local'; // 접수 기록이 어느 중간지점 것인지 구분
 
 function gasRelay(url) {
   const timeoutFetch = (u, opt = {}, ms = 60000) => {
@@ -234,6 +237,10 @@ function blobToBase64(blob) {
 
 const $ = (id) => document.getElementById(id);
 const show = (id) => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
+if (!Relay) {
+  document.body.innerHTML = '<section class="screen bg on"><div class="label">2027 우리 새해 방명록</div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
+  throw new Error('no relay');
+}
 $('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
 
 const REC_SEC = 10;
@@ -316,7 +323,7 @@ async function send() {
   show('s-wait');
   try {
     const r = await Relay.upload(recBlob, recMime, message);
-    localStorage.setItem('woori-gb-id', r.id);
+    localStorage.setItem('woori-gb', JSON.stringify({ id: r.id, relay: RELAY_KEY }));
     stopCamera();
     watch(r.id);
   } catch (e) {
@@ -327,27 +334,36 @@ async function send() {
   }
 }
 $('b-retry').onclick = send;
-$('b-again').onclick = () => { localStorage.removeItem('woori-gb-id'); location.reload(); };
+$('b-again').onclick = () => { localStorage.removeItem('woori-gb'); location.reload(); };
 
 function watch(id) {
   clearInterval(pollTimer);
+  let fails = 0;
   const check = async () => {
     try {
       const s = await Relay.status(id);
+      fails = 0;
       const sideTxt = s.side === 'L' ? '왼쪽' : s.side === 'R' ? '오른쪽' : '';
       if (s.status === 'pending') setWait('spinner', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.');
       else if (s.status === 'approved') setWait('spinner', `송출 대기 ${s.position}번째`, `예상 약 ${Math.max(1, Math.ceil(s.position * 20 / 2 / 60))}분 후 서예박물관 외벽에 나와요.`);
       else if (s.status === 'playing') setWait('dot', '지금 외벽에 나오고 있어요!', `서예박물관 ${sideTxt} 벽을 봐주세요 ✨`);
       else if (s.status === 'played') { done('송출 완료', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.'); }
       else if (s.status === 'rejected') { done('송출되지 않았어요', '검수 기준에 맞지 않아 영상이 파기되었어요. 다시 참여해 주세요.'); }
-    } catch (e) { /* 일시 오류는 다음 폴링에서 재시도 */ }
+    } catch (e) {
+      if (/없음/.test(e.message)) { done('접수 기록을 찾을 수 없어요', '처음부터 다시 참여해 주세요.'); return; }
+      if (++fails >= 5) { // 네트워크가 계속 안 될 때: 상태는 계속 확인하되 탈출 버튼 표시
+        $('w-err').textContent = '연결이 불안정해요. 잠시 후 자동으로 다시 확인합니다.';
+        $('b-again').style.display = 'block';
+      }
+    }
   };
   check();
   pollTimer = setInterval(check, 3000);
 }
 function done(title, desc) {
   clearInterval(pollTimer);
-  localStorage.removeItem('woori-gb-id');
+  localStorage.removeItem('woori-gb');
+  $('w-err').textContent = '';
   setWait('', title, desc);
   $('b-again').style.display = 'block';
 }
@@ -358,8 +374,13 @@ function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop());
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // 페이지를 닫았다 다시 열어도 대기 화면 복구
-const saved = localStorage.getItem('woori-gb-id');
-if (saved) { show('s-wait'); watch(saved); }
+localStorage.removeItem('woori-gb-id'); // 이전 버전 기록 정리
+let saved = null;
+try { saved = JSON.parse(localStorage.getItem('woori-gb') || 'null'); } catch (e) {}
+if (saved && saved.relay === RELAY_KEY && saved.id) {
+  setWait('spinner', '접수 상태 확인 중…', '잠시만 기다려 주세요.');
+  show('s-wait'); watch(saved.id);
+} else if (saved) localStorage.removeItem('woori-gb'); // 다른 중간지점(또는 로컬 모드) 기록은 버림
 </script>
 </body>
 </html>

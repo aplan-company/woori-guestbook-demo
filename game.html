@@ -44,8 +44,11 @@
 const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
 // ===== 중간지점(Relay) 연결 — 세 파일 공통 =====
 // ENDPOINT가 비어 있으면 '로컬 데모 모드'(같은 PC 같은 브라우저의 탭끼리 IndexedDB로 주고받음)
-const API = new URLSearchParams(location.search).get('api') || ENDPOINT;
-const Relay = API ? gasRelay(API) : localRelay();
+const QS = new URLSearchParams(location.search);
+const API = QS.get('api') || ENDPOINT;
+const LOCAL_OK = QS.has('local') || location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+const Relay = API ? gasRelay(API) : (LOCAL_OK ? localRelay() : null);
+const RELAY_KEY = API || 'local'; // 접수 기록이 어느 중간지점 것인지 구분
 
 function gasRelay(url) {
   const timeoutFetch = (u, opt = {}, ms = 60000) => {
@@ -140,6 +143,7 @@ function blobToBase64(blob) {
 }
 
 
+if (!Relay) { document.body.innerHTML = '<p style="color:#fff;font:20px sans-serif;padding:40px">연결 정보가 없어요. 주소 뒤에 ?api=웹앱URL 을 붙여 열어주세요. (같은 PC 테스트는 ?local)</p>'; throw new Error('no relay'); }
 // ===== 송출 설정 =====
 const PANEL_W = 1080, PANEL_H = 1920;   // 벽 한 면 해상도 (MadMapper에서 좌/우로 잘라 매핑)
 const SIDES = ['L', 'R'];               // 서예박물관 좌·우 외벽

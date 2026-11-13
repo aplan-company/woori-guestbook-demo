@@ -43,6 +43,7 @@
 (또는 주소 뒤에 `?api=웹앱URL`을 붙여 열어도 됩니다 — 공개 저장소에는 URL을 넣지 말고 이 방식을 권장. 목록 페이지(index.html)에 붙이면 세 화면에 자동 전달)
 
 ### 3) 올리기
+- 실제 주소(GitHub Pages)에서는 `?api=`가 없으면 "연결 정보가 없어요"가 뜹니다. 같은 PC 로컬 테스트는 localhost로 열거나 `?local`을 붙이세요
 - `mobile.html`은 **HTTPS**에서만 카메라가 켜집니다 → GitHub Pages 등에 업로드 후 그 주소를 QR로 만듭니다
 - `console.html`, `game.html`은 PC에서 파일을 그냥 열어도 됩니다
 
