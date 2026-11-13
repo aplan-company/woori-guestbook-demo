@@ -104,7 +104,7 @@ function localRelay() {
       return { ok: true, id };
     },
     async list(status) {
-      return (await all()).filter(x => !status || x.status === status)
+      return (await all()).filter(x => !status || String(status).split(',').includes(x.status))
         .sort((a, b) => a.createdAt - b.createdAt)
         .map(({ blob, ...rest }) => rest);
     },
@@ -148,8 +148,8 @@ if (!Relay) { document.body.innerHTML = '<p style="color:#fff;font:20px sans-ser
 const PANEL_W = 1080, PANEL_H = 1920;   // 벽 한 면 해상도 (MadMapper에서 좌/우로 잘라 매핑)
 const SIDES = ['L', 'R'];               // 서예박물관 좌·우 외벽
 const LOOPS = 2;                        // 한 영상 반복 횟수 (10초 × 2)
-const POLL_MS = 2000;
-const PRELOAD = 3;                      // 미리 받아둘 영상 수
+const POLL_MS = 1500;
+const PRELOAD = 4;                      // 미리 받아둘 영상 수 (검수 대기 포함)
 
 const stage = document.getElementById('stage');
 stage.style.width = PANEL_W * SIDES.length + 'px';
@@ -181,16 +181,23 @@ function fit() {
 addEventListener('resize', fit); fit();
 
 // ===== 대기열 =====
+// 검수 대기(pending) 단계부터 영상을 미리 받아두고, 승인(approved)되면 바로 재생
 const queue = [];          // 승인된 항목 {id, message}
-const seen = new Set();    // 이미 큐에 넣었거나 송출한 id
+const seen = new Set();    // 큐에 넣었거나 송출한 id
 const ready = new Map();   // id → objectURL (미리 받은 영상)
+const loading = new Set();
+let pendingList = [];      // 아직 검수 중인 항목 (미리 받기 대상)
 let paused = false, played = 0, lastErr = '';
 
 async function poll() {
   if (paused) return;
   try {
-    const items = await Relay.list('approved');
-    for (const it of items) if (!seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+    const items = await Relay.list('pending,approved');
+    const active = new Set(items.map(x => x.id));
+    for (const it of items) if (it.status === 'approved' && !seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+    pendingList = items.filter(x => x.status === 'pending');
+    // 반려되었거나 사라진 항목의 미리 받은 영상은 즉시 폐기
+    for (const [id, url] of ready) if (!active.has(id) && !queue.some(q => q.id === id)) { URL.revokeObjectURL(url); ready.delete(id); }
     lastErr = '';
   } catch (e) { lastErr = e.message; }
   preload();
@@ -198,15 +205,17 @@ async function poll() {
 }
 
 async function preload() {
-  for (const it of queue.slice(0, PRELOAD)) {
-    if (ready.has(it.id) || it.loading) continue;
-    it.loading = true;
-    try { ready.set(it.id, URL.createObjectURL(await Relay.getFile(it.id))); }
-    catch (e) { // 파일이 없으면(이미 파기 등) 건너뜀
-      queue.splice(queue.indexOf(it), 1); lastErr = e.message;
-    }
-    it.loading = false;
-    schedule();
+  const targets = [...queue, ...pendingList].slice(0, PRELOAD);
+  for (const it of targets) {
+    if (ready.has(it.id) || loading.has(it.id)) continue;
+    loading.add(it.id);
+    Relay.getFile(it.id).then(blob => {
+      ready.set(it.id, URL.createObjectURL(blob));
+      schedule();
+    }).catch(e => { // 파일이 없으면(이미 파기 등) 건너뜀
+      const qi = queue.findIndex(q => q.id === it.id); if (qi >= 0) queue.splice(qi, 1);
+      lastErr = e.message;
+    }).finally(() => loading.delete(it.id));
   }
 }
 
@@ -258,7 +267,7 @@ addEventListener('keydown', e => {
   if (k === 'p') { paused = !paused; if (!paused) poll(); }
 });
 setInterval(() => {
-  hud.textContent = `mode: ${Relay.mode}${paused ? '  [일시정지]' : ''}\nqueue: ${queue.length}  ready: ${ready.size}  played: ${played}\n` +
+  hud.textContent = `mode: ${Relay.mode}${paused ? '  [일시정지]' : ''}\nqueue: ${queue.length}  pending: ${pendingList.length}  ready: ${ready.size}  played: ${played}\n` +
     panels.map(p => `${p.side}: ${p.item ? '#' + p.item.id : '-'}`).join('  ') + (lastErr ? `\nerr: ${lastErr}` : '');
 }, 500);
 

@@ -101,7 +101,7 @@ function localRelay() {
       return { ok: true, id };
     },
     async list(status) {
-      return (await all()).filter(x => !status || x.status === status)
+      return (await all()).filter(x => !status || String(status).split(',').includes(x.status))
         .sort((a, b) => a.createdAt - b.createdAt)
         .map(({ blob, ...rest }) => rest);
     },
@@ -150,7 +150,8 @@ async function refresh() {
   if (busy) return;
   busy = true;
   try {
-    const [pending, approved] = await Promise.all([Relay.list('pending'), Relay.list('approved')]);
+    const items = await Relay.list('pending,approved');
+    const pending = items.filter(x => x.status === 'pending'), approved = items.filter(x => x.status === 'approved');
     document.getElementById('n-pending').textContent = pending.length;
     document.getElementById('n-approved').textContent = approved.length;
     const ids = new Set(pending.map(p => p.id));
@@ -202,7 +203,7 @@ document.addEventListener('keydown', e => {
 });
 
 refresh();
-setInterval(refresh, 3000);
+setInterval(refresh, 1500);
 </script>
 </body>
 </html>

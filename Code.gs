@@ -63,7 +63,7 @@ function upload_(b) {
 
 function list_(status) {
   return rows_()
-    .filter(r => !status || r[C.status] === status)
+    .filter(r => !status || String(status).split(',').indexOf(r[C.status]) >= 0) // 'pending,approved'처럼 여러 상태 가능
     .sort((a, b) => a[C.createdAt] - b[C.createdAt])
     .map(r => ({ id: r[C.id], createdAt: r[C.createdAt], status: r[C.status], mime: r[C.mime], message: r[C.message], side: r[C.side] }));
 }
@@ -95,15 +95,16 @@ function setStatus_(id, status, side) {
     const values = sh.getDataRange().getValues();
     for (let i = 1; i < values.length; i++) {
       if (String(values[i][C.id]) !== String(id)) continue;
-      const row = i + 1;
-      sh.getRange(row, C.status + 1).setValue(status);
-      sh.getRange(row, C.updatedAt + 1).setValue(Date.now());
-      if (side) sh.getRange(row, C.side + 1).setValue(side);
+      const r = values[i].slice();
+      r[C.status] = status;
+      r[C.updatedAt] = Date.now();
+      if (side) r[C.side] = side;
       if (status === 'rejected' || status === 'played') {
-        fileId = values[i][C.fileId];
-        sh.getRange(row, C.fileId + 1).setValue('');   // 파일 참조 제거
-        sh.getRange(row, C.message + 1).setValue('');  // 문구도 파기
+        fileId = r[C.fileId];
+        r[C.fileId] = '';   // 파일 참조 제거
+        r[C.message] = '';  // 문구도 파기
       }
+      sh.getRange(i + 1, 1, 1, r.length).setValues([r]); // 한 번에 쓰기
       break;
     }
   });
