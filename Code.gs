@@ -7,6 +7,7 @@
  */
 
 const CONFIG = {
+  SHEET_ID: '',               // 비워두면 연결된 시트 사용. 웹 앱에서 못 찾으면 스프레드시트 ID 입력
   SHEET_NAME: 'queue',
   FOLDER_NAME: '우리새해방명록_임시영상',
   AUTO_APPROVE: false,        // true면 검수 없이 바로 송출 대기
@@ -126,7 +127,7 @@ function purgeAll() {
 
 // ---------- 유틸 ----------
 function sheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(CONFIG.SHEET_ID);
   let sh = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sh) { sh = ss.insertSheet(CONFIG.SHEET_NAME); sh.appendRow(COLS); }
   return sh;

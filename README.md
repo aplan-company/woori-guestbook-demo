@@ -34,11 +34,13 @@
 4. 권한 승인(시트·드라이브 접근) 후 나오는 **웹 앱 URL** 복사 (`https://script.google.com/macros/s/.../exec`)
 5. (선택) 영구 삭제: Apps Script 왼쪽 **서비스 +** → **Drive API** 추가. 안 하면 파기 시 휴지통으로 이동합니다.
 
+> 웹 앱에서 `getSheetByName` 오류가 나면 `CONFIG.SHEET_ID`에 스프레드시트 ID(시트 주소의 /d/ 뒤 부분)를 넣고 다시 배포하세요.
+
 > 코드를 고친 뒤에는 **배포 → 배포 관리 → 수정 → 새 버전**으로 다시 배포해야 반영됩니다.
 
 ### 2) 세 HTML에 URL 넣기
 각 파일 `<script>` 첫 줄의 `const ENDPOINT = '';` 따옴표 안에 웹 앱 URL을 넣습니다.
-(또는 주소 뒤에 `?api=웹앱URL`을 붙여 열어도 됩니다)
+(또는 주소 뒤에 `?api=웹앱URL`을 붙여 열어도 됩니다 — 공개 저장소에는 URL을 넣지 말고 이 방식을 권장. 목록 페이지(index.html)에 붙이면 세 화면에 자동 전달)
 
 ### 3) 올리기
 - `mobile.html`은 **HTTPS**에서만 카메라가 켜집니다 → GitHub Pages 등에 업로드 후 그 주소를 QR로 만듭니다
