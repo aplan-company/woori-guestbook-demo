@@ -49,7 +49,7 @@ function doPost(e) {
 // ---------- 동작 ----------
 function upload_(b) {
   if (!b.data || !b.mime) throw new Error('영상 데이터 없음');
-  const id = Utilities.getUuid().slice(0, 8);
+  const id = 'g' + Utilities.getUuid().replace(/-/g, '').slice(0, 9); // 숫자로 읽히지 않게 문자 접두사
   const ext = b.mime.indexOf('mp4') >= 0 ? '.mp4' : '.webm';
   const blob = Utilities.newBlob(Utilities.base64Decode(b.data), b.mime, id + ext);
   const file = folder_().createFile(blob);
@@ -94,7 +94,7 @@ function setStatus_(id, status, side) {
     const sh = sheet_();
     const values = sh.getDataRange().getValues();
     for (let i = 1; i < values.length; i++) {
-      if (values[i][C.id] !== id) continue;
+      if (String(values[i][C.id]) !== String(id)) continue;
       const row = i + 1;
       sh.getRange(row, C.status + 1).setValue(status);
       sh.getRange(row, C.updatedAt + 1).setValue(Date.now());
@@ -129,12 +129,12 @@ function purgeAll() {
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet() || SpreadsheetApp.openById(CONFIG.SHEET_ID);
   let sh = ss.getSheetByName(CONFIG.SHEET_NAME);
-  if (!sh) { sh = ss.insertSheet(CONFIG.SHEET_NAME); sh.appendRow(COLS); }
+  if (!sh) { sh = ss.insertSheet(CONFIG.SHEET_NAME); sh.appendRow(COLS); sh.getRange('A:A').setNumberFormat('@'); }
   return sh;
 }
 function rows_() {
   const v = sheet_().getDataRange().getValues();
-  return v.slice(1).filter(r => r[C.id]);
+  return v.slice(1).filter(r => r[C.id]).map(r => { r[C.id] = String(r[C.id]); return r; });
 }
 function folder_() {
   const it = DriveApp.getFoldersByName(CONFIG.FOLDER_NAME);
