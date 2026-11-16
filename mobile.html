@@ -979,15 +979,8 @@ $('s-wait').addEventListener('pointerdown', (e) => { // 탭하면 그 자리에�
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// 페이지를 닫았다 다시 열어도 대기 화면 복구
-localStorage.removeItem('woori-gb-id'); // 이전 버전 기록 정리
-let saved = null;
-try { saved = JSON.parse(localStorage.getItem('woori-gb') || 'null'); } catch (e) {}
-const fresh = saved && saved.ts && Date.now() - saved.ts < 60 * 60 * 1000; // 1시간 지난 기록은 새로 시작
-if (saved && fresh && saved.relay === RELAY_KEY && saved.id) {
-  setWait('scan', '접수 상태 확인 중…', '잠시만 기다려 주세요.');
-  show('s-wait'); watch(saved.id);
-} else if (saved) localStorage.removeItem('woori-gb'); // 오래됐거나 다른 중간지점(또는 로컬 모드) 기록은 버림
+// 다시 접속하면 항상 첫 화면부터 (이전 접수 기록은 지움)
+localStorage.removeItem('woori-gb-id'); localStorage.removeItem('woori-gb');
 </script>
 </body>
 </html>
