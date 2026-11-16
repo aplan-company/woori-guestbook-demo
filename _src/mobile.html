@@ -255,7 +255,7 @@
   .frame::after { right:-2px; bottom:-2px; border-left:0; border-top:0; border-radius:0 0 30px 0; }
   .ovTop { position:absolute; top:calc(28px + env(safe-area-inset-top)); left:28px; right:28px; display:flex; justify-content:space-between; align-items:center; color:#fff; pointer-events:none; }
   .ovTop .year { font-size:22px; }
-  .ovMsg { position:absolute; bottom:150px; left:20px; right:20px; font-size:44px; pointer-events:none; }
+  .ovMsg { position:absolute; bottom:calc(196px + env(safe-area-inset-bottom)); left:20px; right:20px; font-size:42px; pointer-events:none; }
   .bar { display:none; }
   .controls { position:absolute; left:0; right:0; bottom:0; padding:18px 22px calc(26px + env(safe-area-inset-bottom)); display:flex; justify-content:center; align-items:center; gap:12px; }
   .rec { --p:0; position:relative; width:78px; height:78px; border-radius:50%; border:4px solid #fff; padding:0;
@@ -269,6 +269,24 @@
   @keyframes pop { 0% { transform:scale(1.6); opacity:0; } 30% { transform:scale(1); opacity:1; } 100% { transform:scale(.85); opacity:.2; } }
   .timer { position:absolute; top:calc(76px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font:700 15px/1 ui-monospace,Menlo,monospace; letter-spacing:.1em; color:#fff; }
   .hint { position:absolute; top:calc(78px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:14px; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.6); pointer-events:none; }
+  /* 영상/사진 모드 전환 */
+  .modeSw { position:absolute; left:50%; bottom:calc(132px + env(safe-area-inset-bottom)); transform:translateX(-50%); display:flex; padding:4px; border-radius:999px;
+    background:rgba(0,0,0,.35); backdrop-filter:blur(12px); box-shadow:0 0 0 1px rgba(255,255,255,.25) inset; }
+  .modeSw button { position:relative; z-index:1; border:0; background:none; color:rgba(255,255,255,.75); font-size:14px; font-weight:700; padding:9px 18px; border-radius:999px; transition:color .3s; }
+  .modeSw button.on { color:var(--main1); }
+  .modeSw i { position:absolute; top:4px; bottom:4px; left:4px; width:var(--w,50%); border-radius:999px; background:#fff; transform:translateX(var(--x,0)); transition: transform .45s var(--spring), width .45s var(--spring); }
+  body.recording .modeSw, body.forcePhoto .modeSw { display:none; }
+  .photoOnly { display:none; position:absolute; left:20px; right:20px; bottom:calc(132px + env(safe-area-inset-bottom)); text-align:center; font-size:13px; color:#fff;
+    padding:10px 14px; border-radius:14px; background:rgba(0,0,0,.4); backdrop-filter:blur(12px); }
+  .photoOnly b { color:#8fe6ff; }
+  body.forcePhoto .photoOnly { display:block; }
+  body.capPhoto .rec { background:radial-gradient(circle at 50% 38%, #fff 0%, #fff 55%, #dbeeff 100%); }
+  body.capPhoto .rec::after { display:none; }
+  .flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; }
+  .flash.on { animation: shutter .5s ease-out; }
+  @keyframes shutter { 0% { opacity:.95; } 100% { opacity:0; } }
+  #reviewImg { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); display:none; }
+  body.revPhoto #reviewImg { display:block; } body.revPhoto #review { display:none; }
   /* 대기 */
   .sp-wait { height:calc(var(--cy) + 28vw - env(safe-area-inset-top) - 70px + 8px); flex:none; }
   .card { text-align:center; padding:8px 4px; }
@@ -306,9 +324,9 @@
   <div class="sp-intro"></div>
   <div class="label">NEW YEAR · LIGHT GUESTBOOK</div>
   <h1>당신의 인사가<br>새해의 첫 빛이 됩니다</h1>
-  <p>10초 영상으로 새해 인사를 남기면, 모두의 빛과 함께 서예박물관 외벽에 떠올라요. 앱 설치 없이 바로 참여할 수 있어요.</p>
+  <p>5초 영상이나 사진으로 새해 인사를 남기면, 모두의 빛과 함께 서예박물관 외벽에 떠올라요. 앱 설치 없이 바로 참여할 수 있어요.</p>
   <div class="grow"></div>
-  <div class="steps3"><span><b>1</b>한마디 쓰기</span><i></i><span><b>2</b>10초 셀피</span><i></i><span><b>3</b>외벽에 빛나기</span></div>
+  <div class="steps3"><span><b>1</b>한마디 쓰기</span><i></i><span><b>2</b>셀피 찍기</span><i></i><span><b>3</b>외벽에 빛나기</span></div>
   <button class="btn" id="b-start">새해 인사 남기기</button>
 </section>
 
@@ -339,14 +357,14 @@
 </div></div>
 <template id="t1"><h3>개인정보 수집·이용 동의 (필수)</h3>
   <table>
-    <tr><th>수집 항목</th><td>얼굴이 포함된 10초 셀피 영상, 새해 한마디(20자 이내)</td></tr>
+    <tr><th>수집 항목</th><td>얼굴이 포함된 셀피(5초 영상 또는 사진), 새해 한마디(20자 이내)</td></tr>
     <tr><th>이용 목적</th><td>「우리 새해 방명록」 외벽 송출, 송출 전 운영자 검수</td></tr>
     <tr><th>보유 기간</th><td><b>송출 직후 즉시 파기</b> · 검수에서 반려되면 즉시 파기 · 미송출분도 행사 종료 즉시 파기</td></tr>
     <tr><th>처리 위탁</th><td>클라우드 서버(Supabase, 서울 리전) — 영상 임시 보관·전달</td></tr>
   </table>
   <p>이름, 전화번호 등 다른 개인정보는 받지 않아요. 동의를 거부할 수 있으며, 거부하면 방명록 참여만 제한돼요.</p></template>
 <template id="t2"><h3>외벽 공개 송출 동의 (필수)</h3>
-  <p>보내주신 영상과 한마디는 검수 후 예술의전당 서예박물관 외벽에 약 20초간 공개 송출돼요.</p>
+  <p>보내주신 영상·사진과 한마디는 검수 후 예술의전당 서예박물관 외벽에 약 10초간 공개 송출돼요.</p>
   <p>송출 장면은 현장 관객의 촬영·SNS 게시나 행사 기록 영상에 담길 수 있어요. 이는 주최·운영 측이 통제할 수 없는 점 양해 부탁드려요.</p>
   <p>부적절한 표현, 타인의 얼굴이 함께 담긴 영상, 광고성 내용은 송출되지 않고 즉시 파기돼요.</p></template>
 <template id="t3"><h3>만 14세 이상 확인 (필수)</h3>
@@ -369,7 +387,7 @@
   <div class="count"><span id="cnt">0</span> / 20</div>
   <div class="wallPrev" id="msgPrevBox"><div class="hand" id="msgPrev"></div></div>
   <div class="grow"></div>
-  <button class="btn" id="b-msg" disabled>다음 · 10초 셀피 찍기</button>
+  <button class="btn" id="b-msg" disabled>다음 · 셀피 찍기</button>
 </section>
 
 <!-- 3. 촬영 -->
@@ -384,7 +402,10 @@
     <div class="ovMsg hand" id="liveMsg"></div>
     <div class="bar" id="bar"></div>
     <div class="big" id="big"></div>
-    <div class="controls"><button class="rec" id="b-rec" aria-label="녹화"></button></div>
+    <div class="flash" id="shot"></div>
+    <div class="modeSw" id="modeSw"><button data-m="video" class="on">영상 5초</button><button data-m="photo">사진</button><i></i></div>
+    <div class="photoOnly" id="photoOnly">지금은 접속이 많아 <b>사진</b>으로만 참여할 수 있어요</div>
+    <div class="controls"><button class="rec" id="b-rec" aria-label="촬영"></button></div>
   </div>
 </section>
 
@@ -392,6 +413,7 @@
 <section id="s-review" class="screen">
   <div class="stage">
     <video id="review" playsinline muted autoplay loop></video>
+    <img id="reviewImg" alt="">
     <div class="glowB"></div>
     <div class="frame"></div>
     <div class="ovTop"><span class="pill">미리보기</span></div>
@@ -501,7 +523,7 @@ if (!Relay) {
 }
 $('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
 
-const REC_SEC = 10;
+const REC_SEC = 5;
 let stream = null, recorder = null, chunks = [], recBlob = null, recMime = '', message = '', pollTimer = null;
 
 // ---- 1. 동의
@@ -541,31 +563,69 @@ async function openCamera() {
     $('live').srcObject = stream;
     hand($('liveMsg'), message); $('hint').style.display = '';
     $('timer').textContent = '';
-    show('s-cam');
+    show('s-cam'); requestAnimationFrame(() => setCapMode(capMode));
   } catch (e) {
     alert('카메라를 켤 수 없어요.\n브라우저 설정에서 카메라 권한을 허용해 주세요.\n(카카오톡·네이버 앱 안에서 열었다면 기본 브라우저로 열어주세요)');
   }
 }
+// ---- 영상 / 사진 모드
+let capMode = 'video', forcePhoto = false, busyShot = false;
+function setCapMode(m) {
+  capMode = forcePhoto ? 'photo' : m;
+  document.body.classList.toggle('capPhoto', capMode === 'photo');
+  const sw = $('modeSw'), btns = [...sw.querySelectorAll('button')], on = btns.find(b => b.dataset.m === capMode);
+  btns.forEach(b => b.classList.toggle('on', b === on));
+  sw.style.setProperty('--w', on.offsetWidth + 'px'); sw.style.setProperty('--x', (on.offsetLeft - 4) + 'px');
+  $('b-rec').setAttribute('aria-label', capMode === 'photo' ? '사진 찍기' : '녹화');
+}
+$('modeSw').querySelectorAll('button').forEach(b => b.onclick = () => setCapMode(b.dataset.m));
+function applyConfig(c) {
+  forcePhoto = (c && c.capture_mode) === 'photo';
+  document.body.classList.toggle('forcePhoto', forcePhoto);
+  setCapMode(forcePhoto ? 'photo' : capMode);
+}
+Relay.getConfig && Relay.getConfig().then(applyConfig).catch(() => {});
+Relay.subscribeConfig && Relay.subscribeConfig(applyConfig);
+setInterval(() => Relay.getConfig && Relay.getConfig().then(applyConfig).catch(() => {}), 20000);
+
 $('b-rec').onclick = async () => {
-  if (recorder && recorder.state === 'recording') return;
+  if ((recorder && recorder.state === 'recording') || busyShot) return;
+  busyShot = true; document.body.classList.add('recording');
   $('hint').style.display = 'none';
   for (const n of [3, 2, 1]) { const b = $('big'); b.textContent = n; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); await sleep(800); }
   $('big').textContent = '';
-  startRecording();
+  if (capMode === 'photo') takePhoto(); else startRecording();
 };
+function takePhoto() {
+  const v = $('live'), vw = v.videoWidth || 540, vh = v.videoHeight || 960, k = Math.min(1, 1280 / Math.max(vw, vh));
+  const c = document.createElement('canvas'); c.width = Math.round(vw * k); c.height = Math.round(vh * k);
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  const f = $('shot'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+  c.toBlob((b) => {
+    busyShot = false; document.body.classList.remove('recording');
+    if (!b) { alert('사진을 찍지 못했어요. 다시 시도해 주세요.'); return; }
+    recBlob = b; recMime = 'image/jpeg';
+    const url = URL.createObjectURL(b);
+    $('reviewImg').src = url; document.body.classList.add('revPhoto');
+    hand($('revMsg'), message);
+    const a = $('save'); a.href = url; a.download = 'woori-newyear.jpg';
+    setTimeout(() => show('s-review'), 350);
+  }, 'image/jpeg', 0.86);
+}
 function startRecording() {
   recMime = pickMime();
   chunks = [];
   try {
-    const VBR = 900000; // 0.9Mbps → 10초 약 1.1MB
+    const VBR = 900000; // 0.9Mbps → 5초 약 0.6MB
     recorder = new MediaRecorder(stream, recMime ? { mimeType: recMime, videoBitsPerSecond: VBR } : { videoBitsPerSecond: VBR });
-  } catch (e) { alert('이 브라우저는 녹화를 지원하지 않아요.'); return; }
+  } catch (e) { busyShot = false; document.body.classList.remove('recording'); alert('이 브라우저는 영상 녹화를 지원하지 않아요. 사진 모드로 찍어주세요.'); setCapMode('photo'); return; }
   recMime = (recorder.mimeType || recMime || 'video/webm').split(';')[0];
   recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
   recorder.onstop = () => {
     recBlob = new Blob(chunks, { type: recMime });
     const url = URL.createObjectURL(recBlob);
-    $('review').src = url;
+    $('review').src = url; document.body.classList.remove('revPhoto');
+    busyShot = false; document.body.classList.remove('recording');
     hand($('revMsg'), message);
     const a = $('save'); a.href = url; a.download = 'woori-newyear' + (recMime.includes('mp4') ? '.mp4' : '.webm');
     $('b-rec').classList.remove('on');
@@ -586,13 +646,13 @@ function startRecording() {
 }
 
 // ---- 4. 확인
-$('b-retake').onclick = () => { URL.revokeObjectURL($('review').src); recBlob = null; openCamera(); };
+$('b-retake').onclick = () => { URL.revokeObjectURL($('review').src || ''); URL.revokeObjectURL($('reviewImg').src || ''); recBlob = null; document.body.classList.remove('revPhoto'); openCamera(); };
 $('b-send').onclick = () => { askTilt(); send(); };
 
 // ---- 5. 전송·대기
 async function send() {
   if (!recBlob) return;
-  setWait('send', '전송 중…', `영상 ${(recBlob.size / 1024 / 1024).toFixed(1)}MB를 보내고 있어요.`);
+  setWait('send', '전송 중…', recMime.startsWith('image') ? `사진 ${Math.round(recBlob.size / 1024)}KB를 보내고 있어요.` : `영상 ${(recBlob.size / 1024 / 1024).toFixed(1)}MB를 보내고 있어요.`);
   $('b-retry').style.display = 'none'; $('w-err').textContent = '';
   show('s-wait');
   try {

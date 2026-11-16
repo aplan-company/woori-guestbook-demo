@@ -19,8 +19,8 @@ function supabaseRelay(url, key, staffKey) {
   return {
     mode: 'supabase',
     async upload(blob, mime, message) {
-      const ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
-      const path = 'v/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
+      const ext = mimeExt(mime);
+      const path = (mime.startsWith('image') ? 'p/' : 'v/') + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
       const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType: mime, upsert: false });
       if (up.error) fail(up.error, '업로드 실패');
       const ins = await sb.from('guestbook').insert({ path, mime, message: String(message || '').slice(0, 20) }).select('id').single();
@@ -64,6 +64,23 @@ function supabaseRelay(url, key, staffKey) {
       }
       return { ok: true, status: data.status, position, side: data.side };
     },
+    // 운영 설정 (capture_mode: both | photo)
+    async getConfig() {
+      const { data, error } = await sb.from('app_config').select('k,v');
+      if (error) return { ...DEFAULT_CONFIG };
+      return Object.assign({ ...DEFAULT_CONFIG }, Object.fromEntries(data.map(r => [r.k, r.v])));
+    },
+    async setConfig(k, v) {
+      const { error } = await sb.rpc('staff_set_config', { p_key: staffKey, p_k: k, p_v: v });
+      if (error) fail(error);
+      return { ok: true };
+    },
+    subscribeConfig(cb) {
+      sb.channel('config-' + Math.random().toString(36).slice(2))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, () => this.getConfig().then(cb))
+        .subscribe();
+      return true;
+    },
     // 새 접수·상태 변경이 생기면 즉시 호출 (폴링 대신)
     subscribe(cb) {
       sb.channel('guestbook-' + Math.random().toString(36).slice(2))
@@ -106,6 +123,8 @@ function gasRelay(url) {
     },
     setStatus(id, status, side = '') { return post({ action: 'setStatus', id, status, side }); },
     status(id) { return get({ action: 'status', id }); },
+    async getConfig() { return { ...DEFAULT_CONFIG }; },
+    async setConfig() { throw new Error('Apps Script 모드에서는 사진 전용 전환을 지원하지 않아요'); },
   };
 }
 
@@ -154,8 +173,14 @@ function localRelay() {
         ? items.filter(x => x.status === 'approved' && x.createdAt < me.createdAt).length + 1 : 0;
       return { ok: true, status: me.status, position, side: me.side };
     },
+    async getConfig() { try { return Object.assign({ ...DEFAULT_CONFIG }, JSON.parse(localStorage.getItem('woori-gb-config') || '{}')); } catch (e) { return { ...DEFAULT_CONFIG }; } },
+    async setConfig(k, v) { const c = await this.getConfig(); c[k] = v; localStorage.setItem('woori-gb-config', JSON.stringify(c)); return { ok: true }; },
+    subscribeConfig(cb) { addEventListener('storage', (e) => { if (e.key === 'woori-gb-config') this.getConfig().then(cb); }); return true; },
   };
 }
+
+const DEFAULT_CONFIG = { capture_mode: 'both' };
+function mimeExt(m) { return m.includes('mp4') ? 'mp4' : m.includes('webm') ? 'webm' : m.includes('png') ? 'png' : m.includes('webp') ? 'webp' : m.includes('jpeg') || m.includes('jpg') ? 'jpg' : 'bin'; }
 
 function blobToBase64(blob) {
   return new Promise((res, rej) => {

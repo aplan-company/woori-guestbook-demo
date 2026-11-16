@@ -30,7 +30,14 @@
     background:linear-gradient(135deg,#39b8ff,#1673ff); padding:6px 9px; border-radius:999px; }
   .card.ok-out { transform:translateY(-40px) scale(.9); opacity:0; }
   .card.no-out { transform:scale(.8) rotate(-4deg); opacity:0; }
-  .card video { width:100%; aspect-ratio:9/16; object-fit:cover; background:#0a1a33; display:block; transform:scaleX(-1); }
+  .card .media { width:100%; aspect-ratio:9/16; object-fit:cover; background:#0a1a33; display:block; transform:scaleX(-1); }
+  .kind { position:absolute; right:12px; top:12px; z-index:2; font:700 10px/1 var(--mono); letter-spacing:.12em; color:#fff; background:rgba(10,26,51,.55); padding:6px 8px; border-radius:999px; backdrop-filter:blur(8px); }
+  .mswitch { display:flex; align-items:center; gap:10px; border:0; cursor:pointer; padding:8px 8px 8px 14px; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; font-size:13px; font-weight:700; backdrop-filter:blur(10px); }
+  .mswitch .tg { position:relative; width:42px; height:24px; border-radius:999px; background:rgba(255,255,255,.35); transition:background .3s; }
+  .mswitch .tg::after { content:""; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .35s var(--spring); }
+  .mswitch.on { background:#fff; color:var(--blue); box-shadow:0 8px 24px rgba(10,26,51,.25); }
+  .mswitch.on .tg { background:linear-gradient(135deg,#39b8ff,#1673ff); }
+  .mswitch.on .tg::after { transform:translateX(18px); }
   .meta { padding:12px 14px 6px; }
   .msg { font-family:"Wooridaum",sans-serif; font-size:17px; font-weight:700; min-height:22px; letter-spacing:-.01em; }
   .time { font:500 11px/1.4 var(--mono); color:var(--muted); margin-top:5px; letter-spacing:.04em; }
@@ -54,6 +61,7 @@
   <h1>검수 콘솔</h1>
   <span class="stat">검수 대기<b id="n-pending">0</b></span>
   <span class="stat">송출 대기<b id="n-approved">0</b></span>
+  <button class="mswitch" id="mswitch" title="네트워크가 혼잡할 때 모든 폰을 사진 모드로만 촬영하게 합니다"><span id="mlabel">사진 전용 모드 OFF</span><span class="tg"></span></button>
   <span class="mode" id="mode"></span>
   <span class="help">NEXT 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
 </header>
@@ -86,8 +94,8 @@ function supabaseRelay(url, key, staffKey) {
   return {
     mode: 'supabase',
     async upload(blob, mime, message) {
-      const ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
-      const path = 'v/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
+      const ext = mimeExt(mime);
+      const path = (mime.startsWith('image') ? 'p/' : 'v/') + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2)) + '.' + ext;
       const up = await sb.storage.from(BUCKET).upload(path, blob, { contentType: mime, upsert: false });
       if (up.error) fail(up.error, '업로드 실패');
       const ins = await sb.from('guestbook').insert({ path, mime, message: String(message || '').slice(0, 20) }).select('id').single();
@@ -131,6 +139,23 @@ function supabaseRelay(url, key, staffKey) {
       }
       return { ok: true, status: data.status, position, side: data.side };
     },
+    // 운영 설정 (capture_mode: both | photo)
+    async getConfig() {
+      const { data, error } = await sb.from('app_config').select('k,v');
+      if (error) return { ...DEFAULT_CONFIG };
+      return Object.assign({ ...DEFAULT_CONFIG }, Object.fromEntries(data.map(r => [r.k, r.v])));
+    },
+    async setConfig(k, v) {
+      const { error } = await sb.rpc('staff_set_config', { p_key: staffKey, p_k: k, p_v: v });
+      if (error) fail(error);
+      return { ok: true };
+    },
+    subscribeConfig(cb) {
+      sb.channel('config-' + Math.random().toString(36).slice(2))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, () => this.getConfig().then(cb))
+        .subscribe();
+      return true;
+    },
     // 새 접수·상태 변경이 생기면 즉시 호출 (폴링 대신)
     subscribe(cb) {
       sb.channel('guestbook-' + Math.random().toString(36).slice(2))
@@ -173,6 +198,8 @@ function gasRelay(url) {
     },
     setStatus(id, status, side = '') { return post({ action: 'setStatus', id, status, side }); },
     status(id) { return get({ action: 'status', id }); },
+    async getConfig() { return { ...DEFAULT_CONFIG }; },
+    async setConfig() { throw new Error('Apps Script 모드에서는 사진 전용 전환을 지원하지 않아요'); },
   };
 }
 
@@ -221,8 +248,14 @@ function localRelay() {
         ? items.filter(x => x.status === 'approved' && x.createdAt < me.createdAt).length + 1 : 0;
       return { ok: true, status: me.status, position, side: me.side };
     },
+    async getConfig() { try { return Object.assign({ ...DEFAULT_CONFIG }, JSON.parse(localStorage.getItem('woori-gb-config') || '{}')); } catch (e) { return { ...DEFAULT_CONFIG }; } },
+    async setConfig(k, v) { const c = await this.getConfig(); c[k] = v; localStorage.setItem('woori-gb-config', JSON.stringify(c)); return { ok: true }; },
+    subscribeConfig(cb) { addEventListener('storage', (e) => { if (e.key === 'woori-gb-config') this.getConfig().then(cb); }); return true; },
   };
 }
+
+const DEFAULT_CONFIG = { capture_mode: 'both' };
+function mimeExt(m) { return m.includes('mp4') ? 'mp4' : m.includes('webm') ? 'webm' : m.includes('png') ? 'png' : m.includes('webp') ? 'webp' : m.includes('jpeg') || m.includes('jpg') ? 'jpg' : 'bin'; }
 
 function blobToBase64(blob) {
   return new Promise((res, rej) => {
@@ -261,7 +294,8 @@ function addCard(p) {
   list.querySelector('.empty')?.remove();
   const el = document.createElement('div');
   el.className = 'card';
-  el.innerHTML = `<video muted loop playsinline autoplay></video>
+  const isPhoto = String(p.mime || '').startsWith('image');
+  el.innerHTML = `${isPhoto ? '<img class="media" alt=""><span class="kind">PHOTO</span>' : '<video class="media" muted loop playsinline autoplay></video><span class="kind">VIDEO 5s</span>'}
     <div class="meta"><div class="msg"></div><div class="time">${new Date(p.createdAt).toLocaleTimeString('ko-KR')} · #${p.id}</div></div>
     <div class="acts"><button class="ok">승인</button><button class="no">반려</button></div>`;
   el.querySelector('.msg').textContent = p.message || '(문구 없음)';
@@ -272,7 +306,7 @@ function addCard(p) {
   cards.set(p.id, c);
   Relay.getFile(p.id).then(blob => {
     c.url = URL.createObjectURL(blob);
-    el.querySelector('video').src = c.url;
+    el.querySelector('.media').src = c.url;
   }).catch(() => { el.querySelector('.time').textContent += ' · 영상 불러오기 실패'; });
 }
 function removeCard(id) {
@@ -300,6 +334,23 @@ document.addEventListener('keydown', e => {
   if (e.key === 'a' || e.key === 'A') decide(first, 'approved');
   if (e.key === 'r' || e.key === 'R') decide(first, 'rejected');
 });
+
+// ---- 사진 전용 모드 (모든 폰 접속에 적용)
+let capMode = 'both';
+function renderMode(cfg) {
+  capMode = (cfg && cfg.capture_mode) || 'both';
+  const on = capMode === 'photo';
+  document.getElementById('mswitch').classList.toggle('on', on);
+  document.getElementById('mlabel').textContent = on ? '사진 전용 모드 ON' : '사진 전용 모드 OFF';
+}
+document.getElementById('mswitch').onclick = async () => {
+  const next = capMode === 'photo' ? 'both' : 'photo';
+  try { await Relay.setConfig('capture_mode', next); renderMode({ capture_mode: next });
+    toast(next === 'photo' ? '모든 폰이 사진 모드로만 촬영해요' : '영상·사진 모두 촬영할 수 있어요'); }
+  catch (e) { toast('전환 실패: ' + e.message + (STAFF_KEY ? '' : ' (주소에 ?key= 필요)')); }
+};
+Relay.getConfig && Relay.getConfig().then(renderMode);
+Relay.subscribeConfig && Relay.subscribeConfig(renderMode);
 
 refresh();
 const live = Relay.subscribe ? Relay.subscribe(refresh) : false; // 실시간 알림 지원 시 즉시 갱신
