@@ -117,8 +117,12 @@
   @keyframes streak { 0% { opacity:0; transform:rotate(var(--a)) translateY(-2vh) scaleY(.3); } 20% { opacity:1; } 100% { opacity:0; transform:rotate(var(--a)) translateY(-75vh) scaleY(2.4); } }
   .emblem { position:absolute; left:50%; top:45%; width:16vw; height:16vw; margin:-8vw 0 0 -8vw; background:#fff;
     clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
-    filter: drop-shadow(0 0 10px #8fe6ff) drop-shadow(0 0 26px #39b8ff); animation: emb 2.3s cubic-bezier(.6,0,.2,1) forwards; }
-  @keyframes emb { 0% { transform:scale(0) rotate(-90deg); } 25% { transform:scale(1) rotate(0); } 72% { transform:scale(1.3) rotate(45deg); } 100% { transform:scale(60) rotate(90deg); } }
+    filter: drop-shadow(0 0 10px #8fe6ff) drop-shadow(0 0 26px #39b8ff); animation: emb 3s cubic-bezier(.6,0,.2,1) forwards; }
+  @keyframes emb { 0% { transform:scale(0) rotate(-90deg); } 20% { transform:scale(1) rotate(0); } 76% { transform:scale(1.3) rotate(45deg); } 100% { transform:scale(60) rotate(90deg); } }
+  .wtitle { position:absolute; left:0; right:0; top:calc(45% + 15vw); text-align:center; color:#fff; font-family:"Wooridaum",sans-serif; font-weight:700; font-size:25px; letter-spacing:-.01em;
+    text-shadow:0 0 18px rgba(57,184,255,.9), 0 2px 10px rgba(3,10,31,.8); opacity:0; animation: wtIn 3s cubic-bezier(.3,.7,.2,1) forwards; }
+  .wtitle small { display:block; margin-bottom:8px; font:600 10.5px/1 ui-monospace,Menlo,monospace; letter-spacing:.24em; color:#8fe6ff; }
+  @keyframes wtIn { 0% { opacity:0; transform:translateY(14px); filter:blur(6px); } 22% { opacity:0; transform:translateY(14px); filter:blur(6px); } 40% { opacity:1; transform:none; filter:none; } 74% { opacity:1; transform:none; filter:none; } 92% { opacity:0; transform:scale(1.6); filter:blur(4px); } 100% { opacity:0; } }
   .wflash { position:absolute; inset:0; background:#fff; opacity:0; }
   body.warpOut .wflash { opacity:1; transition:opacity .25s; }
   .wskip { position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); text-align:center; font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.2em; color:rgba(255,255,255,.55); }
@@ -293,12 +297,15 @@
   #w-icon { display:none; }
   .err { color:var(--red); font-size:14px; margin-top:10px; min-height:20px; text-align:center; }
   .foot { display:flex; justify-content:center; padding-top:14px; }
-  .foot img { height:18px; }
+  .foot { align-items:center; gap:12px; }
+  .foot img { height:17px; } .foot img.sac { height:19px; }
+  .foot .sep { width:1px; height:15px; background:var(--ink); opacity:.25; }
+  .kicker { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:19px; letter-spacing:-.01em; color:#3aa8ff; }
   .mode { position:fixed; right:10px; bottom:6px; font-size:10px; color:rgba(11,31,58,.35); z-index:9; }
 </style>
 </head>
 <body data-scene="s-intro" class="warping hold">
-<div id="warp" aria-hidden="true"><i class="wl ci" style="--k:0;--c:#1673ff;--r:40deg"></i><i class="wl sq" style="--k:1;--c:#39b8ff;--r:-50deg"></i><i class="wl ci" style="--k:2;--c:#8fe6ff;--r:35deg"></i><i class="wl sq" style="--k:3;--c:#0b5bd6;--r:-30deg"></i><i class="wl ci" style="--k:4;--c:#19c3ff;--r:60deg"></i><i class="wl sq" style="--k:5;--c:#bfefff;--r:-45deg"></i><i class="wp" style="--a:165deg;--d:1.04s"></i><i class="wp" style="--a:202deg;--d:0.72s"></i><i class="wp" style="--a:37deg;--d:0.90s"></i><i class="wp" style="--a:48deg;--d:0.40s"></i><i class="wp" style="--a:29deg;--d:1.00s"></i><i class="wp" style="--a:109deg;--d:0.04s"></i><i class="wp" style="--a:222deg;--d:0.46s"></i><i class="wp" style="--a:123deg;--d:0.10s"></i><i class="wp" style="--a:217deg;--d:0.07s"></i><i class="wp" style="--a:289deg;--d:0.14s"></i><i class="wp" style="--a:114deg;--d:0.69s"></i><i class="wp" style="--a:298deg;--d:1.04s"></i><i class="wp" style="--a:295deg;--d:0.64s"></i><i class="wp" style="--a:25deg;--d:1.07s"></i><i class="wp" style="--a:23deg;--d:0.61s"></i><i class="wp" style="--a:68deg;--d:0.32s"></i><i class="wp" style="--a:73deg;--d:0.59s"></i><i class="wp" style="--a:292deg;--d:0.34s"></i><i class="wp" style="--a:349deg;--d:0.20s"></i><i class="wp" style="--a:297deg;--d:0.63s"></i><i class="wp" style="--a:96deg;--d:0.41s"></i><i class="wp" style="--a:280deg;--d:0.78s"></i><i class="wp" style="--a:288deg;--d:0.07s"></i><i class="wp" style="--a:105deg;--d:0.55s"></i><i class="wp" style="--a:272deg;--d:0.47s"></i><i class="wp" style="--a:160deg;--d:0.51s"></i><i class="wp" style="--a:232deg;--d:0.40s"></i><i class="wp" style="--a:127deg;--d:0.87s"></i><div class="emblem"></div><div class="wflash"></div><div class="wskip">TAP TO SKIP</div></div>
+<div id="warp" aria-hidden="true"><i class="wl ci" style="--k:0;--c:#1673ff;--r:40deg"></i><i class="wl sq" style="--k:1;--c:#39b8ff;--r:-50deg"></i><i class="wl ci" style="--k:2;--c:#8fe6ff;--r:35deg"></i><i class="wl sq" style="--k:3;--c:#0b5bd6;--r:-30deg"></i><i class="wl ci" style="--k:4;--c:#19c3ff;--r:60deg"></i><i class="wl sq" style="--k:5;--c:#bfefff;--r:-45deg"></i><i class="wp" style="--a:165deg;--d:1.04s"></i><i class="wp" style="--a:202deg;--d:0.72s"></i><i class="wp" style="--a:37deg;--d:0.90s"></i><i class="wp" style="--a:48deg;--d:0.40s"></i><i class="wp" style="--a:29deg;--d:1.00s"></i><i class="wp" style="--a:109deg;--d:0.04s"></i><i class="wp" style="--a:222deg;--d:0.46s"></i><i class="wp" style="--a:123deg;--d:0.10s"></i><i class="wp" style="--a:217deg;--d:0.07s"></i><i class="wp" style="--a:289deg;--d:0.14s"></i><i class="wp" style="--a:114deg;--d:0.69s"></i><i class="wp" style="--a:298deg;--d:1.04s"></i><i class="wp" style="--a:295deg;--d:0.64s"></i><i class="wp" style="--a:25deg;--d:1.07s"></i><i class="wp" style="--a:23deg;--d:0.61s"></i><i class="wp" style="--a:68deg;--d:0.32s"></i><i class="wp" style="--a:73deg;--d:0.59s"></i><i class="wp" style="--a:292deg;--d:0.34s"></i><i class="wp" style="--a:349deg;--d:0.20s"></i><i class="wp" style="--a:297deg;--d:0.63s"></i><i class="wp" style="--a:96deg;--d:0.41s"></i><i class="wp" style="--a:280deg;--d:0.78s"></i><i class="wp" style="--a:288deg;--d:0.07s"></i><i class="wp" style="--a:105deg;--d:0.55s"></i><i class="wp" style="--a:272deg;--d:0.47s"></i><i class="wp" style="--a:160deg;--d:0.51s"></i><i class="wp" style="--a:232deg;--d:0.40s"></i><i class="wp" style="--a:127deg;--d:0.87s"></i><div class="emblem"></div><div class="wtitle"><small>NEW YEAR COUNTDOWN</small>2027 새해, 우리는 해</div><div class="wflash"></div><div class="wskip">TAP TO SKIP</div></div>
 <div id="fx" aria-hidden="true">
   <div class="tunnel"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div>
   <div class="pulse"><i></i><i></i><i></i></div>
@@ -321,12 +328,13 @@
 <section id="s-intro" class="screen bg on">
   <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
   <div class="sp-intro"></div>
-  <div class="label">NEW YEAR · LIGHT GUESTBOOK</div>
+  <div class="kicker">2027 새해, 우리는 해</div>
   <h1>당신의 인사가<br>새해의 첫 빛이 됩니다</h1>
   <p>5초 영상이나 사진으로 새해 인사를 남기면, 모두의 빛과 함께 서예박물관 외벽에 떠올라요. 앱 설치 없이 바로 참여할 수 있어요.</p>
   <div class="grow"></div>
   <div class="steps3"><span><b>1</b>한마디 쓰기</span><i></i><span><b>2</b>셀피 찍기</span><i></i><span><b>3</b>외벽에 빛나기</span></div>
   <button class="btn" id="b-start">새해 인사 남기기</button>
+  <div class="foot"><img src="assets/ci_blue.png" alt="우리금융그룹"><i class="sep"></i><img class="sac" src="assets/sac_color.png" alt="예술의전당"></div>
 </section>
 
 <!-- 1-1. 개인정보 동의 -->
@@ -440,7 +448,7 @@
   <div class="grow"></div>
   <button class="btn" id="b-retry" style="display:none">다시 보내기</button>
   <button class="btn line" id="b-again" style="display:none;margin-top:10px">새로 참여하기</button>
-  <div class="foot"><img src="assets/ci_blue.png" alt="우리금융그룹"></div>
+  <div class="foot"><img src="assets/ci_blue.png" alt="우리금융그룹"><i class="sep"></i><img class="sac" src="assets/sac_color.png" alt="예술의전당"></div>
 </section>
 
 <div class="mode" id="mode"></div>
@@ -694,8 +702,8 @@ let opT1, opT2, opT3;
 function opening() { // 밤의 터널 → 별빛 → 하얀 섬광 → 해가 뜬 빛의 세계
   const b = document.body, sc = $('s-intro');
   show('s-intro'); b.classList.add('warping', 'hold'); sc.classList.remove('in'); clearTimeout(softT); b.classList.remove('soft');
-  opT1 = setTimeout(() => b.classList.add('warpOut'), 2050);
-  opT2 = setTimeout(land, 2350);
+  opT1 = setTimeout(() => b.classList.add('warpOut'), 2750);
+  opT2 = setTimeout(land, 3050);
 }
 function land() {
   const b = document.body, sc = $('s-intro');

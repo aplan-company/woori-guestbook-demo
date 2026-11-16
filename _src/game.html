@@ -59,7 +59,7 @@
   .panel.out .dot2 { opacity:0; }
   .frame { position:absolute; z-index:2; left:38px; top:38px; width:1004px; height:1844px; border-radius:68px; overflow:hidden; opacity:0; transition:opacity .8s; background:#0a1a33; }
   .frame::before { content:""; position:absolute; z-index:1; left:0; right:0; bottom:0; height:46%; pointer-events:none;
-    background:linear-gradient(180deg, rgba(6,20,48,0) 0%, rgba(6,20,48,.45) 45%, rgba(6,20,48,.82) 100%); }
+    background:linear-gradient(180deg, rgba(6,20,48,0) 0%, rgba(6,20,48,.45) 40%, rgba(6,20,48,.9) 64%, #061430 76%, #061430 100%); }
   .frame::after { z-index:1; }
   .panel.live .frame { opacity:1; transition-delay:.7s; }
   .panel.out .frame { opacity:0; transition-delay:0s; transition-duration:.4s; }
@@ -112,11 +112,14 @@
 
   /* 하단 브랜드: 「우리는 해」 + 우리금융그룹 CI */
   .brand { position:absolute; z-index:2; left:0; right:0; top:1720px; display:flex; flex-direction:column; align-items:center; }
-  .slogan { display:flex; align-items:center; gap:18px; font-size:64px; font-weight:700; letter-spacing:-.01em; }
-  .slogan .sun { position:relative; width:84px; height:84px; display:grid; place-items:center; }
+  .slogan { display:flex; align-items:center; gap:16px; font-size:56px; font-weight:700; letter-spacing:-.01em; }
+  .slogan .sun { position:relative; width:76px; height:76px; display:grid; place-items:center; }
   .slogan .sun img { position:absolute; inset:0; width:100%; height:100%; }
-  .slogan .sun i { position:relative; top:6px; font-style:normal; font-size:48px; color:#0a4f8c; }
-  .ci { height:40px; margin-top:22px; }
+  .slogan .sun i { position:relative; top:5px; font-style:normal; font-size:42px; color:#0a4f8c; }
+  .cobrand { display:flex; align-items:center; gap:30px; margin-top:20px; }
+  .ci { height:46px; } .ci.sac { height:50px; }
+  .sep { width:2px; height:46px; background:var(--ink); opacity:.22; }
+  .panel.live:not(.out) .sep { background:#fff; opacity:.5; }
   #hud { position:fixed; left:10px; bottom:8px; color:#7fa; font:12px/1.4 monospace; background:#000a; padding:6px 10px; display:none; white-space:pre; z-index:9; }
 </style>
 </head>
@@ -197,8 +200,8 @@ const panels = SIDES.map((side, idx) => {
     <div class="horizon"></div>
     <div class="count">LIGHTS TONIGHT <b>0000</b></div>
     <div class="brand">
-      <div class="slogan">우리는 <span class="sun"><img src="assets/yeomyeong.png" alt=""><i>해</i></span></div>
-      <img class="ci b" src="assets/ci_blue.png" alt="우리금융그룹"><img class="ci w" src="assets/ci_white.png" alt="">
+      <div class="slogan">2027 새해, 우리는 <span class="sun"><img src="assets/yeomyeong.png" alt=""><i>해</i></span></div>
+      <div class="cobrand"><img class="ci b" src="assets/ci_blue.png" alt="우리금융그룹"><img class="ci w" src="assets/ci_white.png" alt=""><i class="sep"></i><img class="ci b sac" src="assets/sac_color.png" alt="예술의전당"><img class="ci w sac" src="assets/sac_white.png" alt=""></div>
     </div>
   </div>`;
   stage.appendChild(el);
