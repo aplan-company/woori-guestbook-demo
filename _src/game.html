@@ -24,7 +24,6 @@
   .panel.live .msg { top:1330px; }
   .panel.live .msg .w { color:#fff; text-shadow:0 0 6px rgba(255,255,255,.6), 0 0 30px rgba(57,184,255,.9), 0 6px 24px rgba(0,0,0,.45); }
   .panel.live:not(.out) .slogan { color:#fff; }
-  .panel.live .slogan .sun i { color:#0a4f8c; }
   .ci.w { display:none; } .panel.live:not(.out) .ci.w { display:block; } .panel.live:not(.out) .ci.b { display:none; }
   .lights, .horizon, .count { transition:opacity .6s; }
   .panel.live .lights, .panel.live .horizon, .panel.live .count { opacity:0; }
@@ -112,10 +111,7 @@
 
   /* 하단 브랜드: 「우리는 해」 + 우리금융그룹 CI */
   .brand { position:absolute; z-index:2; left:0; right:0; top:1720px; display:flex; flex-direction:column; align-items:center; }
-  .slogan { display:flex; align-items:center; gap:16px; font-size:56px; font-weight:700; letter-spacing:-.01em; }
-  .slogan .sun { position:relative; width:76px; height:76px; display:grid; place-items:center; }
-  .slogan .sun img { position:absolute; inset:0; width:100%; height:100%; }
-  .slogan .sun i { position:relative; top:5px; font-style:normal; font-size:42px; color:#0a4f8c; }
+  .slogan { display:flex; align-items:center; font-size:60px; font-weight:700; letter-spacing:-.01em; }
   .cobrand { display:flex; align-items:center; gap:30px; margin-top:20px; }
   .ci { height:46px; } .ci.sac { height:50px; }
   .sep { width:2px; height:46px; background:var(--ink); opacity:.22; }
@@ -200,7 +196,7 @@ const panels = SIDES.map((side, idx) => {
     <div class="horizon"></div>
     <div class="count">LIGHTS TONIGHT <b>0000</b></div>
     <div class="brand">
-      <div class="slogan">2027 새해, 우리는 <span class="sun"><img src="assets/yeomyeong.png" alt=""><i>해</i></span></div>
+      <div class="slogan">2027 새해, 우리는 해</div>
       <div class="cobrand"><img class="ci b" src="assets/ci_blue.png" alt="우리금융그룹"><img class="ci w" src="assets/ci_white.png" alt=""><i class="sep"></i><img class="ci b sac" src="assets/sac_color.png" alt="예술의전당"><img class="ci w sac" src="assets/sac_white.png" alt=""></div>
     </div>
   </div>`;
