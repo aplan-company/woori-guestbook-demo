@@ -173,7 +173,7 @@
   /* ---------- 화면 공통 ---------- */
   .screen { position:fixed; inset:0; z-index:1; display:none; flex-direction:column; padding:calc(18px + env(safe-area-inset-top)) 24px calc(22px + env(safe-area-inset-bottom)); }
   .screen.on { display:flex; }
-  .hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; color:var(--ink); transition:color .6s; }
+  .hd { display:flex; align-items:center; justify-content:space-between; min-height:34px; margin-bottom:20px; color:var(--ink); transition:color .6s; }
   .pill { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:13.5px; padding:7px 13px 8px; border-radius:999px; border:1px solid currentColor; }
   .year { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:26px; line-height:1; letter-spacing:-.03em; }
   body[data-scene="s-intro"] .hd, body[data-wait="done"] .hd { color:#fff; }
@@ -326,7 +326,7 @@
 
 <!-- 1. 안내·동의 -->
 <section id="s-intro" class="screen bg on">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
+  <div class="hd"></div>
   <div class="sp-intro"></div>
   <div class="kicker">2027 새해, 우리는 해</div>
   <h1>당신의 인사가<br>새해의 첫 빛이 됩니다</h1>
@@ -339,7 +339,7 @@
 
 <!-- 1-1. 개인정보 동의 -->
 <section id="s-consent" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
+  <div class="hd"></div>
   <div class="label">PRIVACY · 개인정보 수집·이용 동의</div>
   <h1>참여 전에<br>동의가 필요해요</h1>
   <p>얼굴이 담긴 영상은 개인정보예요. 외벽 송출에만 쓰고, 송출 직후 바로 지워요.</p>
@@ -380,7 +380,7 @@
 
 <!-- 2. 새해 한마디 -->
 <section id="s-msg" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
+  <div class="hd"></div>
   <div class="label">STEP 01 / 02 · MESSAGE</div>
   <h1>새해 한마디를<br>적어주세요</h1>
   <p>영상과 함께 외벽에 표시돼요.</p>
@@ -403,7 +403,7 @@
     <video id="live" playsinline muted autoplay></video>
     <div class="glowB"></div>
     <div class="frame"></div>
-    <div class="ovTop"><span class="pill">「우리 새해 방명록」</span></div>
+    <div class="ovTop"></div>
     <div class="hint" id="hint">얼굴을 액자 가운데에 맞추고 버튼을 눌러주세요</div>
     <div class="timer" id="timer"></div>
     <div class="ovMsg hand" id="liveMsg"></div>
@@ -436,7 +436,7 @@
 
 <!-- 5. 전송·대기 -->
 <section id="s-wait" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
+  <div class="hd"></div>
   <div class="sp-wait"></div>
   <div class="card">
     <div id="w-icon" class="spinner"></div>
@@ -716,7 +716,7 @@ function land() {
 $('warp').addEventListener('pointerdown', () => { if (document.body.classList.contains('warping') && !document.body.classList.contains('landing')) land(); });
 opening();
 if (!Relay) {
-  document.body.innerHTML = '<section class="screen bg on"><div class="hd"><span class="pill">「우리 새해 방명록」</span></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
+  document.body.innerHTML = '<section class="screen bg on"><div class="hd"></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
   throw new Error('no relay');
 }
 $('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
