@@ -193,7 +193,8 @@
   .btn.line { background:#fff; color:var(--ink); box-shadow:0 0 0 1px var(--line) inset; }
   .row { display:flex; gap:10px; }
   .steps3 { display:flex; align-items:center; gap:6px; margin:0 0 14px; font-size:13px; color:var(--ink); }
-  .steps3 span { padding:7px 12px; border-radius:999px; background:#fff; box-shadow:0 0 0 1px var(--line) inset; }
+  .steps3 span { padding:7px 10px; border-radius:999px; background:#fff; box-shadow:0 0 0 1px var(--line) inset; white-space:nowrap; font-size:12.5px; letter-spacing:-.02em; }
+  .steps3 i { min-width:4px; }
   .steps3 b { color:var(--main1); margin-right:5px; font-family:ui-monospace,Menlo,monospace; }
   .steps3 i { flex:1; height:1px; background:var(--line); }
   /* 동의 */
@@ -426,6 +427,16 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// PC 화면에서 열면 폰 크기 미리보기 틀 안에 띄움 (실제 참여는 폰)
+if (innerWidth > 700 && window === top && !new URLSearchParams(location.search).has('embed')) {
+  const u = new URL(location.href); u.searchParams.set('embed', '');
+  document.documentElement.innerHTML = `<head><meta charset="utf-8"><title>우리 새해 방명록</title></head>
+  <body style="margin:0;height:100vh;display:grid;place-items:center;background:linear-gradient(180deg,#f3f9ff,#dcebfd);font-family:-apple-system,'Malgun Gothic',sans-serif">
+  <div style="text-align:center"><iframe src="${u.href}" allow="camera; microphone; accelerometer; gyroscope"
+   style="height:min(844px,88vh);aspect-ratio:390/844;border:10px solid #0a1a33;border-radius:46px;background:#fff;box-shadow:0 30px 80px rgba(10,26,51,.25)"></iframe>
+  <p style="color:#5a6b80;font-size:13px;margin-top:14px">PC 미리보기 · 실제 참여는 폰으로 QR을 찍어 주세요</p></div></body>`;
+  throw new Error('pc preview');
+}
 const ENDPOINT = ''; // ← Apps Script 웹 앱 URL 붙여넣기 (비워두면 로컬 데모 모드)
 const SB_URL = 'https://jmsnadveqmduzprrevlb.supabase.co';  // Supabase 프로젝트 URL
 const SB_KEY = 'sb_publishable_5tBAE0E6yw9PGkGmeXj0Yw_LMEVIMPw';  // 공개용(publishable) 키 — RLS로 보호되므로 코드에 넣어도 됨
@@ -753,7 +764,7 @@ async function send() {
   show('s-wait');
   try {
     const r = await Relay.upload(recBlob, recMime, message);
-    localStorage.setItem('woori-gb', JSON.stringify({ id: r.id, relay: RELAY_KEY }));
+    localStorage.setItem('woori-gb', JSON.stringify({ id: r.id, relay: RELAY_KEY, ts: Date.now() }));
     stopCamera();
     watch(r.id);
   } catch (e) {
@@ -887,10 +898,11 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 localStorage.removeItem('woori-gb-id'); // 이전 버전 기록 정리
 let saved = null;
 try { saved = JSON.parse(localStorage.getItem('woori-gb') || 'null'); } catch (e) {}
-if (saved && saved.relay === RELAY_KEY && saved.id) {
+const fresh = saved && saved.ts && Date.now() - saved.ts < 60 * 60 * 1000; // 1시간 지난 기록은 새로 시작
+if (saved && fresh && saved.relay === RELAY_KEY && saved.id) {
   setWait('scan', '접수 상태 확인 중…', '잠시만 기다려 주세요.');
   show('s-wait'); watch(saved.id);
-} else if (saved) localStorage.removeItem('woori-gb'); // 다른 중간지점(또는 로컬 모드) 기록은 버림
+} else if (saved) localStorage.removeItem('woori-gb'); // 오래됐거나 다른 중간지점(또는 로컬 모드) 기록은 버림
 </script>
 </body>
 </html>
