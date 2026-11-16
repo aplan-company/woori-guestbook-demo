@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>2027 우리 새해 방명록</title>
+<title>우리 새해 방명록</title>
 <style>
   @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:swap; }
   @font-face { font-family:"NanumPen"; src:url(assets/fonts/NanumPenScript.woff2) format("woff2"); font-display:swap; }
@@ -103,24 +103,34 @@
   #w-hint { display:none; margin-top:6px; font:600 12px/1.4 ui-monospace,Menlo,monospace; letter-spacing:.06em; color:var(--main1); }
   body[data-wait="float"] #w-hint { display:block; animation: fadeIn .6s .4s both; }
   body[data-scene="s-wait"] .state, body[data-scene="s-wait"] #w-desc { text-shadow:0 0 12px #fff, 0 0 4px #fff; }
-  /* 오프닝: 수평선에 빛이 번지고, 작은 빛이 떠올라 해가 됨 */
-  .horizon { position:absolute; left:50%; top:62vh; height:2px; width:0; transform:translateX(-50%); opacity:0; border-radius:2px;
-    background:linear-gradient(90deg, rgba(57,184,255,0), #39b8ff 22%, #fff 50%, #39b8ff 78%, rgba(57,184,255,0)); box-shadow:0 0 18px #39b8ff, 0 0 40px rgba(57,184,255,.6);
-    transition: width .8s cubic-bezier(.2,.8,.2,1), opacity .5s; }
-  body.line .horizon { width:110vw; opacity:1; }
-  body:not(.op) .horizon { opacity:0; transition: opacity .6s .2s; }
-  .flash { position:absolute; left:50%; top:0; width:170vw; height:130vw; margin:-65vw 0 0 -85vw; opacity:0; pointer-events:none;
-    background:radial-gradient(closest-side, #fff 0%, rgba(191,239,255,.85) 35%, rgba(255,255,255,0) 100%); }
-  body.flashOn .flash { animation: flash 1.1s ease-out 1; }
-  @keyframes flash { 0% { opacity:0; transform:scale(.4); } 25% { opacity:1; } 100% { opacity:0; transform:scale(1.25); } }
-  body.op[data-scene="s-intro"] .b1 { left:48vw; top:calc(62vh - 2vw); width:4vw; height:4vw; border-radius:2vw; box-shadow:0 0 24px 6px rgba(57,184,255,.8); transition-duration:.5s; }
-  body.op .b2 { opacity:0; transform:scale(0); }
-  body.op .hd { color:var(--ink) !important; }
+  /* 오프닝: 밤의 터널을 지나 빛의 세계로 진입 */
+  #warp { position:fixed; inset:0; z-index:30; overflow:hidden; display:none; pointer-events:auto;
+    background: radial-gradient(60% 45% at 50% 45%, #0b3fb0 0%, #071a4a 45%, #030a1f 100%); }
+  body.warping #warp { display:block; }
+  body.warpOut #warp { opacity:0; transition:opacity .7s ease .15s; }
+  .wl { position:absolute; left:50%; top:45%; width:44vw; height:44vw; margin:-22vw 0 0 -22vw; border:5vw solid var(--c); opacity:0;
+    animation: warpIn 1.9s cubic-bezier(.55,0,.9,.4) infinite; animation-delay:calc(var(--k) * .32s); }
+  .wl.sq { border-radius:12vw; } .wl.ci { border-radius:50%; }
+  @keyframes warpIn { 0% { transform:scale(.04) rotate(0deg); opacity:0; } 15% { opacity:1; } 100% { transform:scale(9) rotate(var(--r)); opacity:1; } }
+  .wp { position:absolute; left:50%; top:45%; width:3px; height:18px; margin:-9px 0 0 -1.5px; border-radius:2px; background:linear-gradient(#fff, rgba(143,230,255,0)); opacity:0;
+    transform: rotate(var(--a)) translateY(0); animation: streak 1.1s cubic-bezier(.6,0,.9,.5) infinite; animation-delay:var(--d); }
+  @keyframes streak { 0% { opacity:0; transform:rotate(var(--a)) translateY(-2vh) scaleY(.3); } 20% { opacity:1; } 100% { opacity:0; transform:rotate(var(--a)) translateY(-75vh) scaleY(2.4); } }
+  .emblem { position:absolute; left:50%; top:45%; width:16vw; height:16vw; margin:-8vw 0 0 -8vw; background:#fff;
+    clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%);
+    filter: drop-shadow(0 0 10px #8fe6ff) drop-shadow(0 0 26px #39b8ff); animation: emb 2.3s cubic-bezier(.6,0,.2,1) forwards; }
+  @keyframes emb { 0% { transform:scale(0) rotate(-90deg); } 25% { transform:scale(1) rotate(0); } 72% { transform:scale(1.3) rotate(45deg); } 100% { transform:scale(60) rotate(90deg); } }
+  .wflash { position:absolute; inset:0; background:#fff; opacity:0; }
+  body.warpOut .wflash { opacity:1; transition:opacity .25s; }
+  .wskip { position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); text-align:center; font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.2em; color:rgba(255,255,255,.55); }
+  body.hold #s-intro > :not(.hd):not(h1) { opacity:0; transform:translateY(18px); }
+  body[data-scene="s-intro"].landing .b1 { transition: none; }
+  body.landing .b1 { animation: land 1.1s cubic-bezier(.2,.9,.25,1.1) 1; }
+  @keyframes land { from { transform:scale(1.25); filter:brightness(1.6); } to { transform:none; filter:none; } }
   #s-intro > :not(.hd) { transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
   body.hold #s-intro > :not(.hd):not(h1) { opacity:0; transform:translateY(18px); }
   #s-intro .steps3 { transition-delay:.15s; } #s-intro .btn { transition-delay:.3s; }
-  body[data-scene="s-intro"]:not(.op) .rise { opacity:.7; }
-  body[data-scene="s-intro"]:not(.op) .rise i { animation: up 6s cubic-bezier(.3,.1,.3,1) infinite; }
+  body[data-scene="s-intro"] .rise { opacity:.7; }
+  body[data-scene="s-intro"] .rise i { animation: up 6s cubic-bezier(.3,.1,.3,1) infinite; }
   .rise { position:absolute; inset:0; opacity:0; transition:opacity .6s; }
   .rise i { position:absolute; bottom:-20px; border-radius:50%; background:#1673ff; opacity:0; }
   body[data-wait="done"] .rise { opacity:1; }
@@ -269,7 +279,8 @@
   .mode { position:fixed; right:10px; bottom:6px; font-size:10px; color:rgba(11,31,58,.35); z-index:9; }
 </style>
 </head>
-<body data-scene="s-intro" class="op hold">
+<body data-scene="s-intro" class="warping hold">
+<div id="warp" aria-hidden="true"><i class="wl ci" style="--k:0;--c:#1673ff;--r:40deg"></i><i class="wl sq" style="--k:1;--c:#39b8ff;--r:-50deg"></i><i class="wl ci" style="--k:2;--c:#8fe6ff;--r:35deg"></i><i class="wl sq" style="--k:3;--c:#0b5bd6;--r:-30deg"></i><i class="wl ci" style="--k:4;--c:#19c3ff;--r:60deg"></i><i class="wl sq" style="--k:5;--c:#bfefff;--r:-45deg"></i><i class="wp" style="--a:165deg;--d:1.04s"></i><i class="wp" style="--a:202deg;--d:0.72s"></i><i class="wp" style="--a:37deg;--d:0.90s"></i><i class="wp" style="--a:48deg;--d:0.40s"></i><i class="wp" style="--a:29deg;--d:1.00s"></i><i class="wp" style="--a:109deg;--d:0.04s"></i><i class="wp" style="--a:222deg;--d:0.46s"></i><i class="wp" style="--a:123deg;--d:0.10s"></i><i class="wp" style="--a:217deg;--d:0.07s"></i><i class="wp" style="--a:289deg;--d:0.14s"></i><i class="wp" style="--a:114deg;--d:0.69s"></i><i class="wp" style="--a:298deg;--d:1.04s"></i><i class="wp" style="--a:295deg;--d:0.64s"></i><i class="wp" style="--a:25deg;--d:1.07s"></i><i class="wp" style="--a:23deg;--d:0.61s"></i><i class="wp" style="--a:68deg;--d:0.32s"></i><i class="wp" style="--a:73deg;--d:0.59s"></i><i class="wp" style="--a:292deg;--d:0.34s"></i><i class="wp" style="--a:349deg;--d:0.20s"></i><i class="wp" style="--a:297deg;--d:0.63s"></i><i class="wp" style="--a:96deg;--d:0.41s"></i><i class="wp" style="--a:280deg;--d:0.78s"></i><i class="wp" style="--a:288deg;--d:0.07s"></i><i class="wp" style="--a:105deg;--d:0.55s"></i><i class="wp" style="--a:272deg;--d:0.47s"></i><i class="wp" style="--a:160deg;--d:0.51s"></i><i class="wp" style="--a:232deg;--d:0.40s"></i><i class="wp" style="--a:127deg;--d:0.87s"></i><div class="emblem"></div><div class="wflash"></div><div class="wskip">TAP TO SKIP</div></div>
 <div id="fx" aria-hidden="true">
   <div class="tunnel"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div>
   <div class="pulse"><i></i><i></i><i></i></div>
@@ -286,14 +297,13 @@
   <i class="spark" style="left:30vw;top:calc(var(--cy) - 16vw);animation-delay:.3s"></i><i class="spark" style="left:64vw;top:calc(var(--cy) - 4vw);animation-delay:1.1s"></i><i class="spark" style="left:44vw;top:calc(var(--cy) + 14vw);animation-delay:1.8s"></i>
   <div class="bits" id="bits"></div>
   <div class="rise"></div>
-  <div class="horizon"></div><div class="flash"></div>
 </div>
 
 <!-- 1. 안내·동의 -->
 <section id="s-intro" class="screen bg on">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
   <div class="sp-intro"></div>
-  <div class="label">2027 NEW YEAR · LIGHT GUESTBOOK</div>
+  <div class="label">NEW YEAR · LIGHT GUESTBOOK</div>
   <h1>당신의 인사가<br>새해의 첫 빛이 됩니다</h1>
   <p>10초 영상으로 새해 인사를 남기면, 모두의 빛과 함께 서예박물관 외벽에 떠올라요. 앱 설치 없이 바로 참여할 수 있어요.</p>
   <div class="grow"></div>
@@ -303,7 +313,7 @@
 
 <!-- 1-1. 개인정보 동의 -->
 <section id="s-consent" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
   <div class="label">PRIVACY · 개인정보 수집·이용 동의</div>
   <h1>참여 전에<br>동의가 필요해요</h1>
   <p>얼굴이 담긴 영상은 개인정보예요. 외벽 송출에만 쓰고, 송출 직후 바로 지워요.</p>
@@ -344,14 +354,14 @@
 
 <!-- 2. 새해 한마디 -->
 <section id="s-msg" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
   <div class="label">STEP 01 / 02 · MESSAGE</div>
   <h1>새해 한마디를<br>적어주세요</h1>
   <p>영상과 함께 외벽에 표시돼요.</p>
   <div class="chips">
     <button class="chip">새해 복 많이 받으세요</button>
     <button class="chip">우리 가족 건강하자</button>
-    <button class="chip">2027, 우리는 해!</button>
+    <button class="chip">새해에도 우리는 해!</button>
     <button class="chip">올해도 함께해요</button>
   </div>
   <input type="text" id="msg" maxlength="20" placeholder="여기에 새해 한마디 (최대 20자)" autocomplete="off">
@@ -367,7 +377,7 @@
     <video id="live" playsinline muted autoplay></video>
     <div class="glowB"></div>
     <div class="frame"></div>
-    <div class="ovTop"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+    <div class="ovTop"><span class="pill">「우리 새해 방명록」</span></div>
     <div class="hint" id="hint">얼굴을 액자 가운데에 맞추고 버튼을 눌러주세요</div>
     <div class="timer" id="timer"></div>
     <div class="ovMsg hand" id="liveMsg"></div>
@@ -383,7 +393,7 @@
     <video id="review" playsinline muted autoplay loop></video>
     <div class="glowB"></div>
     <div class="frame"></div>
-    <div class="ovTop"><span class="pill">미리보기</span><span class="year">2027</span></div>
+    <div class="ovTop"><span class="pill">미리보기</span></div>
     <div class="ovMsg hand" id="revMsg"></div>
     <div class="controls" style="flex-direction:column">
       <div class="row" style="width:100%">
@@ -397,7 +407,7 @@
 
 <!-- 5. 전송·대기 -->
 <section id="s-wait" class="screen bg">
-  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span></div>
   <div class="sp-wait"></div>
   <div class="card">
     <div id="w-icon" class="spinner"></div>
@@ -615,7 +625,7 @@ function measureTo(id, p) {
 function measurePanel() { measureTo('panelArea', 'p'); measureTo('msg', 'm'); }
 addEventListener('resize', measurePanel);
 const show = (id) => {
-  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('op', 'hold', 'line'); }
+  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('warping', 'warpOut', 'hold', 'landing'); }
   document.querySelectorAll('.screen').forEach(s => { const on = s.id === id; s.classList.toggle('on', on); s.classList.remove('in'); });
   document.body.dataset.scene = id;
   const sc = $(id); if (sc) { void sc.offsetWidth; sc.classList.add('in'); }
@@ -624,18 +634,25 @@ const show = (id) => {
 };
 (() => { const r = document.querySelector('#fx .rise'); for (let k = 0; k < 16; k++) { const d = document.createElement('i'); const z = 4 + Math.random() * 10;
   d.style.cssText = `left:${8 + Math.random() * 84}%;width:${z}px;height:${z}px;animation-delay:${(Math.random() * 3.2).toFixed(2)}s;background:${Math.random() < .5 ? '#1673ff' : '#19c3ff'}`; r.append(d); } })();
-let opT1, opT2;
-function opening() { // 수평선 → 떠오르는 빛 → 해 → 문구
+let opT1, opT2, opT3;
+function opening() { // 밤의 터널 → 별빛 → 하얀 섬광 → 해가 뜬 빛의 세계
   const b = document.body, sc = $('s-intro');
-  show('s-intro'); b.classList.add('op', 'hold'); sc.classList.remove('in'); clearTimeout(softT); b.classList.remove('soft');
-  requestAnimationFrame(() => requestAnimationFrame(() => b.classList.add('line')));
-  opT1 = setTimeout(() => { b.classList.remove('op', 'line'); }, 900);
-  opT2 = setTimeout(() => { b.classList.add('flashOn'); b.classList.remove('hold'); sc.classList.add('in');
-    softT = setTimeout(() => b.classList.add('soft'), 700); setTimeout(() => b.classList.remove('flashOn'), 1200); }, 1750);
+  show('s-intro'); b.classList.add('warping', 'hold'); sc.classList.remove('in'); clearTimeout(softT); b.classList.remove('soft');
+  opT1 = setTimeout(() => b.classList.add('warpOut'), 2050);
+  opT2 = setTimeout(land, 2350);
 }
+function land() {
+  const b = document.body, sc = $('s-intro');
+  clearTimeout(opT1); clearTimeout(opT2);
+  if (!b.classList.contains('warpOut')) b.classList.add('warpOut');
+  b.classList.add('landing');
+  opT3 = setTimeout(() => { b.classList.remove('warping', 'warpOut'); }, 900);
+  setTimeout(() => { b.classList.remove('hold', 'landing'); sc.classList.add('in'); softT = setTimeout(() => b.classList.add('soft'), 700); }, 350);
+}
+$('warp').addEventListener('pointerdown', () => { if (document.body.classList.contains('warping') && !document.body.classList.contains('landing')) land(); });
 opening();
 if (!Relay) {
-  document.body.innerHTML = '<section class="screen bg on"><div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
+  document.body.innerHTML = '<section class="screen bg on"><div class="hd"><span class="pill">「우리 새해 방명록」</span></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
   throw new Error('no relay');
 }
 $('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
