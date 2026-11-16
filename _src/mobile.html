@@ -682,13 +682,14 @@ function bitsStart() {
 }
 function bitsGather() { if (bitsMode === 'float') { bitsMode = 'gather'; bitsGatherT = performance.now(); } }
 let bitsGatherT = 0;
-function bitsStep(t) {
-  const dt = Math.min(.033, (t - lastT) / 1000); lastT = t;
+function bitsStep() {
+  const t = performance.now(); // rAF 타임스탬프 대신 현재 시각 사용 (기기마다 기준이 어긋나는 경우 방지)
+  const dt = Math.max(0, Math.min(.033, (t - lastT) / 1000)); lastT = t;
   const W = innerWidth, H = innerHeight, cx = W / 2, cy = H * 0.42;
   if (bitsMode === 'float') {
     const G = 1600, drift = tilt.live ? 0 : 1;
     for (const b of bodies) {
-      b.s += (1 - b.s) * Math.min(1, dt * 6);
+      b.s = Math.max(.05, Math.min(1, b.s + (1 - b.s) * Math.min(1, dt * 6)));
       b.vx += (tilt.gx * G + drift * (Math.sin(t / 900 + b.r) * 60 + (cx - b.x) * .15)) * dt;
       b.vy += (tilt.gy * G + drift * (Math.cos(t / 1100 + b.r) * 60 + (cy - b.y) * .15)) * dt;
       b.vx *= .992; b.vy *= .992; b.x += b.vx * dt; b.y += b.vy * dt; b.a += (b.va + b.vx * .004) * dt; b.va *= .99;
