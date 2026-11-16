@@ -4,38 +4,61 @@
 <meta charset="UTF-8">
 <title>검수 콘솔 · 우리 새해 방명록</title>
 <style>
-  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; --red:#E5484D; --green:#2EB872; }
+  @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:swap; }
+  :root { --blue:#1673ff; --sky:#39b8ff; --cyan:#19c3ff; --ink:#0a1a33; --muted:#5a6b80; --line:#e3ebf4; --red:#ff4d5e;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; --spring:cubic-bezier(.68,-0.18,.22,1.18); }
   * { box-sizing:border-box; }
-  body { margin:0; background:#0e1a2b; color:#e8eef6; font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
-  header { display:flex; align-items:center; gap:20px; padding:14px 22px; background:var(--navy); position:sticky; top:0; z-index:2; }
-  header h1 { font-size:18px; margin:0; }
-  .stat { font-size:14px; color:#a9c1dd; }
-  .stat b { color:#fff; font-size:18px; margin-left:4px; }
-  .help { margin-left:auto; font-size:13px; color:#a9c1dd; }
-  kbd { background:#24395a; border-radius:4px; padding:2px 7px; color:#fff; }
-  main { padding:20px 22px; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
-  .card { background:#16263d; border-radius:14px; overflow:hidden; border:3px solid transparent; }
-  .card.focus { border-color:var(--gold); }
-  .card video { width:100%; aspect-ratio:9/16; object-fit:cover; background:#000; display:block; transform:scaleX(-1); }
-  .meta { padding:10px 12px; }
-  .msg { font-size:16px; font-weight:700; min-height:22px; }
-  .time { font-size:12px; color:#8aa2c0; margin-top:3px; }
-  .acts { display:flex; gap:8px; padding:0 12px 12px; }
-  .acts button { flex:1; border:0; border-radius:10px; padding:11px; font-size:15px; font-weight:700; color:#fff; cursor:pointer; }
-  .ok { background:var(--green); } .no { background:var(--red); }
-  .empty { grid-column:1/-1; text-align:center; color:#6f86a6; padding:80px 0; font-size:16px; }
-  .mode { font-size:12px; color:#6f86a6; }
+  body { margin:0; min-height:100vh; color:var(--ink); background:linear-gradient(180deg,#ffffff 0%,#f3f9ff 60%,#e6f1ff 100%) fixed;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
+  .deco { position:fixed; left:-10vw; top:-62vw; width:120vw; height:80vw; border-radius:50%; pointer-events:none; z-index:0; opacity:.9;
+    background: radial-gradient(60% 60% at 35% 70%, rgba(255,255,255,.7), rgba(255,255,255,0) 60%), linear-gradient(135deg,#8fe6ff,#39b8ff 30%,#1673ff 65%,#0b5bd6);
+    box-shadow:0 30px 120px rgba(22,115,255,.3); }
+  header { position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:14px; padding:18px 28px; color:#fff; }
+  .pill { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:14px; padding:7px 14px 8px; border-radius:999px; border:1.5px solid #fff; }
+  header h1 { font-family:"Wooridaum",sans-serif; font-size:24px; margin:0 8px 0 4px; letter-spacing:-.02em; }
+  .stat { display:flex; align-items:baseline; gap:8px; padding:8px 14px; border-radius:999px; background:rgba(255,255,255,.18); backdrop-filter:blur(10px); font-size:13px; }
+  .stat b { font:700 20px/1 var(--mono); }
+  .mode { font:600 11px/1 var(--mono); letter-spacing:.12em; opacity:.8; }
+  .help { margin-left:auto; font-size:13px; padding:8px 14px; border-radius:999px; background:rgba(10,26,51,.55); backdrop-filter:blur(10px); }
+  kbd { font:700 12px/1 var(--mono); background:#fff; color:var(--blue); border-radius:6px; padding:4px 7px; margin:0 2px; }
+  main { position:relative; z-index:1; padding:26px 28px 40px; display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:18px; }
+  .card { position:relative; background:#fff; border-radius:24px; overflow:hidden; box-shadow:0 0 0 1px var(--line), 0 14px 40px rgba(22,115,255,.12);
+    animation: cIn .5s var(--spring); transition: transform .35s cubic-bezier(.6,0,.3,1), opacity .35s, box-shadow .3s; }
+  @keyframes cIn { from { transform:scale(.85) translateY(20px); opacity:0; } }
+  .card.focus { box-shadow:0 0 0 3px var(--blue), 0 18px 50px rgba(22,115,255,.3); }
+  .card.focus::before { content:"NEXT"; position:absolute; z-index:2; left:12px; top:12px; font:700 11px/1 var(--mono); letter-spacing:.14em; color:#fff;
+    background:linear-gradient(135deg,#39b8ff,#1673ff); padding:6px 9px; border-radius:999px; }
+  .card.ok-out { transform:translateY(-40px) scale(.9); opacity:0; }
+  .card.no-out { transform:scale(.8) rotate(-4deg); opacity:0; }
+  .card video { width:100%; aspect-ratio:9/16; object-fit:cover; background:#0a1a33; display:block; transform:scaleX(-1); }
+  .meta { padding:12px 14px 6px; }
+  .msg { font-family:"Wooridaum",sans-serif; font-size:17px; font-weight:700; min-height:22px; letter-spacing:-.01em; }
+  .time { font:500 11px/1.4 var(--mono); color:var(--muted); margin-top:5px; letter-spacing:.04em; }
+  .acts { display:flex; gap:8px; padding:8px 14px 14px; }
+  .acts button { flex:1; border:0; border-radius:999px; padding:12px; font-size:15px; font-weight:700; cursor:pointer; transition:transform .15s; }
+  .acts button:active { transform:scale(.95); }
+  .ok { color:#fff; background:linear-gradient(135deg,#39b8ff,#1673ff 60%); box-shadow:0 8px 20px rgba(22,115,255,.3); }
+  .no { color:var(--red); background:#fff; box-shadow:0 0 0 1.5px rgba(255,77,94,.5) inset; }
+  .empty { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:18px; padding:110px 0; color:var(--muted); font-size:16px; }
+  .empty i { width:90px; height:90px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff 0, #c9f4ff 30%, #39b8ff 70%, #1673ff 100%);
+    box-shadow:0 20px 60px rgba(22,115,255,.35); animation: breathe 2.6s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform:scale(.9); } }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:9; background:var(--ink); color:#fff; padding:12px 18px; border-radius:999px; font-size:14px; opacity:0; transition:opacity .3s; }
+  .toast.on { opacity:1; }
 </style>
 </head>
 <body>
+<div class="deco"></div>
 <header>
+  <span class="pill">「우리 새해 방명록」</span>
   <h1>검수 콘솔</h1>
   <span class="stat">검수 대기<b id="n-pending">0</b></span>
   <span class="stat">송출 대기<b id="n-approved">0</b></span>
   <span class="mode" id="mode"></span>
-  <span class="help">맨 앞 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
+  <span class="help">NEXT 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
 </header>
-<main id="list"><div class="empty">검수 대기 중인 영상이 없어요</div></main>
+<main id="list"><div class="empty"><i></i>검수 대기 중인 영상이 없어요</div></main>
+<div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -89,19 +112,23 @@ function removeCard(id) {
   const c = cards.get(id); if (!c) return;
   if (c.url) URL.revokeObjectURL(c.url);
   c.el.remove(); cards.delete(id);
-  if (!cards.size) list.innerHTML = '<div class="empty">검수 대기 중인 영상이 없어요</div>';
+  if (!cards.size) list.innerHTML = '<div class="empty"><i></i>검수 대기 중인 영상이 없어요</div>';
 }
 function updateFocus() {
   let first = true;
-  for (const c of cards.values()) { c.el.classList.toggle('focus', first); first = false; }
+  for (const c of cards.values()) { if (c.leaving) continue; c.el.classList.toggle('focus', first); first = false; }
 }
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
 async function decide(id, status) {
-  removeCard(id); updateFocus();
-  try { await Relay.setStatus(id, status); } catch (e) { alert('처리 실패: ' + e.message); }
+  const c = cards.get(id); if (!c || c.leaving) return;
+  c.leaving = true; c.el.classList.add(status === 'approved' ? 'ok-out' : 'no-out');
+  setTimeout(() => { removeCard(id); updateFocus(); }, 350);
+  try { await Relay.setStatus(id, status); toast(status === 'approved' ? '승인 — 송출 대기열에 올렸어요' : '반려 — 영상을 바로 파기했어요'); }
+  catch (e) { toast('처리 실패: ' + e.message); }
   refresh();
 }
 document.addEventListener('keydown', e => {
-  const first = cards.keys().next().value;
+  const first = [...cards].find(([, c]) => !c.leaving)?.[0];
   if (!first) return;
   if (e.key === 'a' || e.key === 'A') decide(first, 'approved');
   if (e.key === 'r' || e.key === 'R') decide(first, 'rejected');

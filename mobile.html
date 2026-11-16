@@ -235,13 +235,13 @@
   input[type=text]:focus { box-shadow:0 0 0 2px var(--main1) inset; }
   .count { text-align:right; color:var(--muted); font-size:12px; margin-top:14px; font-family:ui-monospace,Menlo,monospace; }
   .wallPrev { position:relative; margin-top:10px; height:96px; border-radius:18px; overflow:hidden; display:flex; align-items:center; justify-content:center;
-    background: radial-gradient(120% 140% at 50% 120%, #1673ff 0%, #0a2a66 55%, #040a18 100%); }
-  .wallPrev::before { content:"WALL PREVIEW"; position:absolute; left:12px; top:9px; font:10px/1 ui-monospace,Menlo,monospace; letter-spacing:.14em; color:rgba(255,255,255,.55); }
-  .wallPrev:has(.hand:empty)::after { content:"한마디를 입력하면 외벽 모습이 보여요"; color:rgba(255,255,255,.55); font-size:13px; }
+    background: linear-gradient(180deg,#ffffff 0%,#eaf4ff 100%); box-shadow:0 0 0 1px var(--line), 0 10px 30px rgba(22,115,255,.1); }
+  .wallPrev::before { content:"WALL PREVIEW"; position:absolute; left:12px; top:9px; font:10px/1 ui-monospace,Menlo,monospace; letter-spacing:.14em; color:var(--main1); }
+  .wallPrev:has(.hand:empty)::after { content:"한마디를 입력하면 외벽 모습이 보여요"; color:var(--muted); font-size:13px; }
   .hand { font-family:"NanumPen",cursive; color:#fff; text-align:center; transform:rotate(-3deg); word-break:keep-all; line-height:1; text-shadow:0 0 14px rgba(120,200,255,.6); }
   .hand .heart { display:inline-block; width:.8em; height:.8em; margin-left:.12em; vertical-align:-.08em; overflow:visible; }
   .heart path { fill:none; stroke:var(--heart); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; }
-  .wallPrev .hand { font-size:36px; }
+  .wallPrev .hand { font-size:36px; color:#0b3fb0; text-shadow:0 2px 0 #fff, 0 6px 18px rgba(22,115,255,.3); }
   /* 카메라 */
   #s-cam, #s-review { padding:0; background:#000; }
   .stage { position:relative; flex:1; overflow:hidden; }
