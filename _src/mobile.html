@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>2027 우리 새해 방명록</title>
+<style>
+  @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:swap; }
+  @font-face { font-family:"NanumPen"; src:url(assets/fonts/NanumPenScript.woff2) format("woff2"); font-display:swap; }
+  :root { --main1:#0067AC; --main2:#2482C5; --sub3:#00aec6; --neon:#bdf0ff; --glow:#4cc3ff; --gold:#e8c66a; --heart:#ff6fa8;
+    --ink:#fff; --muted:#a9c3dc; --red:#ff5a6e; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; height:100%; background:#02060d; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
+  body { overflow:hidden; }
+  .screen { position:fixed; inset:0; display:none; flex-direction:column; padding:calc(18px + env(safe-area-inset-top)) 22px calc(22px + env(safe-area-inset-bottom)); }
+  .screen.on { display:flex; }
+  .bg { background:
+      radial-gradient(150% 34% at 50% 108%, rgba(110,200,255,.42) 0%, rgba(36,130,197,.32) 25%, rgba(0,103,172,.12) 50%, transparent 72%),
+      linear-gradient(118deg, transparent 40%, rgba(36,130,197,.09) 40%, rgba(36,130,197,.09) 60%, transparent 60%),
+      linear-gradient(180deg, #02050b 0%, #04101f 60%, #08203b 100%); }
+  .hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .pill { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:14px; padding:7px 14px 8px; border-radius:999px; border:1.5px solid var(--neon);
+    box-shadow:0 0 8px rgba(76,195,255,.7), inset 0 0 8px rgba(76,195,255,.35); text-shadow:0 0 6px rgba(76,195,255,.9); background:rgba(4,20,40,.5); color:#fff; }
+  .year { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:30px; line-height:1; letter-spacing:-.02em;
+    background:linear-gradient(105deg,#8c6b26 0%,#f7e4a4 22%,#c69b3e 40%,#fff6d2 55%,#b48a34 72%,#f1d68a 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .label { color:var(--gold); font-size:12px; font-weight:700; letter-spacing:.14em; }
+  h1 { font-family:"Wooridaum",sans-serif; font-weight:700; font-size:29px; line-height:1.3; margin:8px 0 10px; letter-spacing:-.01em; }
+  p { color:var(--muted); font-size:15px; line-height:1.55; margin:0 0 10px; }
+  .grow { flex:1; }
+  .btn { width:100%; border:0; border-radius:16px; padding:17px; font-size:17px; font-weight:700; color:#fff;
+    background:linear-gradient(135deg, var(--main1), var(--main2)); box-shadow:0 0 0 1px rgba(189,240,255,.35) inset, 0 8px 24px rgba(0,103,172,.45); }
+  .btn:disabled { opacity:.32; box-shadow:none; }
+  .btn.ghost { background:rgba(255,255,255,.1); box-shadow:0 0 0 1px rgba(255,255,255,.18) inset; }
+  .btn.gold { background:linear-gradient(105deg,#c9a24a,#f7e4a4 45%,#d9b25a); color:#1a1405; box-shadow:0 8px 26px rgba(232,198,106,.35); }
+  .row { display:flex; gap:10px; }
+  .check { display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,.055); border:1px solid rgba(189,240,255,.12); border-radius:14px; padding:13px 14px; margin-bottom:9px; font-size:13.5px; line-height:1.5; color:#dce8f5; }
+  .check input { width:22px; height:22px; margin:1px 0 0; accent-color:var(--main2); flex:none; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 16px; }
+  .chip { border:1.5px solid rgba(189,240,255,.45); background:rgba(4,20,40,.4); color:#fff; border-radius:999px; padding:9px 14px; font-size:14px; }
+  .chip:active { box-shadow:0 0 12px rgba(76,195,255,.7); }
+  input[type=text] { width:100%; font-size:20px; padding:16px; border-radius:14px; border:2px solid rgba(189,240,255,.25); background:rgba(255,255,255,.06); color:#fff; outline:none; }
+  input[type=text]:focus { border-color:var(--neon); box-shadow:0 0 14px rgba(76,195,255,.5); }
+  .count { text-align:right; color:var(--muted); font-size:13px; margin-top:6px; }
+  /* 미리보기 손글씨 (외벽과 같은 모양) */
+  .hand { font-family:"NanumPen",cursive; color:#fff; text-align:center; transform:rotate(-4deg); word-break:keep-all; line-height:1;
+    text-shadow:0 0 3px #fff, 0 0 10px var(--glow), 0 0 22px var(--main2), 0 3px 10px rgba(0,0,0,.6); }
+  .hand .heart { display:inline-block; width:.8em; height:.8em; margin-left:.12em; vertical-align:-.08em; overflow:visible; }
+  .heart path { fill:none; stroke:var(--heart); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 0 5px var(--heart)); }
+  .msgPrev { min-height:70px; display:flex; align-items:center; justify-content:center; font-size:38px; margin:6px 0 4px; }
+  /* 소개 화면 미니 외벽 */
+  .hero { position:relative; height:clamp(120px, 24vh, 210px); margin:6px 0 14px; display:flex; justify-content:center; }
+  .hero .fr { position:relative; height:100%; aspect-ratio:3/4; border:3px solid var(--neon); border-radius:18px;
+    box-shadow:0 0 8px var(--glow), 0 0 24px var(--main2), inset 0 0 14px rgba(76,195,255,.5);
+    background:radial-gradient(60% 45% at 50% 38%, rgba(140,200,240,.35), transparent 70%), rgba(3,14,30,.6); animation:breathe 3.6s ease-in-out infinite; }
+  .hero .fr::before { content:""; position:absolute; left:50%; top:22%; width:34%; aspect-ratio:1; transform:translateX(-50%); border-radius:50%; background:rgba(190,225,250,.25); }
+  .hero .fr::after { content:""; position:absolute; left:50%; top:52%; width:62%; height:30%; transform:translateX(-50%); border-radius:50% 50% 12px 12px; background:rgba(190,225,250,.18); }
+  .hero .hand { position:absolute; bottom:-6px; left:0; right:0; font-size:clamp(26px, 5.4vh, 40px); }
+  @keyframes breathe { 50% { box-shadow:0 0 6px var(--glow), 0 0 16px var(--main2), inset 0 0 10px rgba(76,195,255,.35); } }
+  /* 카메라 */
+  #s-cam, #s-review { padding:0; background:#000; }
+  .stage { position:relative; flex:1; overflow:hidden; }
+  .stage video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+  .frame { position:absolute; inset:12px; border:3px solid var(--neon); border-radius:28px; pointer-events:none;
+    box-shadow:0 0 10px var(--glow), 0 0 26px var(--main2), inset 0 0 18px rgba(76,195,255,.55); }
+  .ovTop { position:absolute; top:calc(26px + env(safe-area-inset-top)); left:26px; right:26px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; }
+  .ovTop .year { font-size:26px; }
+  .ovMsg { position:absolute; bottom:140px; left:18px; right:18px; font-size:44px; pointer-events:none; }
+  .bar { position:absolute; top:0; left:0; height:5px; width:0; background:linear-gradient(90deg, var(--main2), var(--neon)); box-shadow:0 0 12px var(--glow); }
+  .controls { position:absolute; left:0; right:0; bottom:0; padding:18px 22px calc(22px + env(safe-area-inset-bottom)); display:flex; justify-content:center; align-items:center; gap:12px; background:linear-gradient(transparent, rgba(0,0,0,.7)); }
+  .rec { width:80px; height:80px; border-radius:50%; border:5px solid #fff; background:var(--red); box-shadow:0 0 0 6px rgba(255,255,255,.18), 0 0 24px rgba(255,90,110,.6); transition:.2s; }
+  .rec.on { border-radius:22px; transform:scale(.8); }
+  .big { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:"Wooridaum",sans-serif; font-size:140px; font-weight:700; color:#fff;
+    text-shadow:0 0 20px var(--glow), 0 0 50px var(--main2); pointer-events:none; }
+  .timer { position:absolute; top:calc(74px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:18px; font-weight:800; color:#fff; text-shadow:0 0 10px rgba(0,0,0,.7); }
+  .hint { position:absolute; top:calc(76px + env(safe-area-inset-top)); left:0; right:0; text-align:center; font-size:14px; color:#e6f3ff; text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none; }
+  /* 대기 */
+  .card { background:rgba(8,24,46,.55); border:1px solid rgba(189,240,255,.18); border-radius:22px; padding:28px 20px; text-align:center;
+    box-shadow:0 0 40px rgba(0,103,172,.25); backdrop-filter:blur(6px); }
+  .state { font-family:"Wooridaum",sans-serif; font-size:25px; font-weight:700; margin:16px 0 8px; }
+  .spinner { width:50px; height:50px; margin:0 auto; border:4px solid rgba(189,240,255,.15); border-top-color:var(--neon); border-radius:50%; animation:spin 1s linear infinite; box-shadow:0 0 16px rgba(76,195,255,.35); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .dot { width:84px; height:84px; margin:0 auto; background:url(assets/yeomyeong.png) center/contain no-repeat; filter:drop-shadow(0 0 18px rgba(160,225,255,.9)); animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform:scale(.88); opacity:.75; } }
+  .done { width:70px; height:64px; margin:0 auto; }
+  .done .heart { width:70px; height:64px; display:block; }
+  .err { color:var(--red); font-size:14px; margin-top:10px; min-height:20px; text-align:center; }
+  .foot { display:flex; justify-content:center; padding-top:14px; }
+  .foot img { height:18px; opacity:.85; }
+  .steps3 { display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 16px; font-size:13px; color:#dce8f5; }
+  .steps3 span { padding:7px 12px; border-radius:999px; border:1px solid rgba(189,240,255,.3); background:rgba(4,20,40,.4); }
+  .steps3 b { color:var(--gold); margin-right:5px; }
+  .steps3 i { width:10px; height:1px; background:rgba(189,240,255,.4); }
+  .agreeAll { display:flex; gap:12px; align-items:center; padding:16px; margin:14px 0 6px; border-radius:16px; font-size:17px; font-weight:700;
+    background:rgba(36,130,197,.18); border:1.5px solid rgba(189,240,255,.45); }
+  .agreeAll input, .term input { width:22px; height:22px; margin:0; accent-color:var(--main2); flex:none; }
+  .terms { padding:4px 4px 0; }
+  .term { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px; border-bottom:1px solid rgba(189,240,255,.1); }
+  .term label { display:flex; gap:12px; align-items:center; font-size:14.5px; color:#e6f0fa; }
+  .term em { font-style:normal; font-size:11px; font-weight:700; color:var(--gold); border:1px solid rgba(232,198,106,.6); border-radius:6px; padding:1px 5px; margin-right:6px; }
+  .see { background:none; border:0; color:var(--muted); font-size:13px; text-decoration:underline; text-underline-offset:3px; padding:6px 2px; flex:none; }
+  .small { font-size:12px; line-height:1.5; margin-bottom:12px; }
+  .sheetWrap { position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.55); display:none; align-items:flex-end; }
+  .sheetWrap.on { display:flex; }
+  .sheet { width:100%; max-height:82vh; display:flex; flex-direction:column; background:#0a1a30; border-top:1px solid rgba(189,240,255,.3); border-radius:22px 22px 0 0;
+    padding:18px 20px calc(18px + env(safe-area-inset-bottom)); box-shadow:0 -10px 40px rgba(0,103,172,.35); }
+  .sheetHd { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; color:var(--muted); font-size:13px; }
+  .sheetHd button { background:none; border:0; color:#fff; font-size:18px; padding:4px 8px; }
+  .sheetBody { overflow:auto; margin-bottom:14px; }
+  .sheetBody h3 { font-family:"Wooridaum",sans-serif; font-size:19px; margin:4px 0 12px; }
+  .sheetBody table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
+  .sheetBody th { width:76px; text-align:left; vertical-align:top; color:var(--muted); font-weight:600; padding:9px 8px 9px 0; border-top:1px solid rgba(189,240,255,.12); }
+  .sheetBody td { padding:9px 0; color:#eaf2fb; line-height:1.5; border-top:1px solid rgba(189,240,255,.12); }
+  .sheetBody td b { color:var(--gold); }
+  .sheetBody p { font-size:13.5px; color:#d3e2f1; }
+  .mode { position:fixed; right:10px; bottom:6px; font-size:10px; color:rgba(255,255,255,.35); z-index:9; }
+</style>
+</head>
+<body>
+
+<!-- 1. 안내·동의 -->
+<section id="s-intro" class="screen bg on">
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="hero"><div class="fr"></div><div class="hand">새해 복 많이 받으세요<svg class="heart" viewBox="0 0 100 92"><path d="M50 86 C22 64 6 48 6 28 C6 14 17 4 30 4 C40 4 47 10 50 18 C53 10 60 4 70 4 C83 4 94 14 94 28 C94 48 78 64 50 86 Z"/></svg></div></div>
+  <h1>10초 새해 인사가<br>외벽에 표출됩니다</h1>
+  <p>내 폰으로 셀피 영상을 찍어 보내면, 검수 후 서예박물관 외벽에 나와요. 앱 설치는 필요 없어요.</p>
+  <div class="grow"></div>
+  <div class="steps3"><span><b>1</b>한마디</span><i></i><span><b>2</b>10초 셀피</span><i></i><span><b>3</b>외벽 송출</span></div>
+  <button class="btn" id="b-start">참여하기</button>
+</section>
+
+<!-- 1-1. 개인정보 동의 -->
+<section id="s-consent" class="screen bg">
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="label">개인정보 수집·이용 동의</div>
+  <h1>참여 전에<br>동의가 필요해요</h1>
+  <p>얼굴이 담긴 영상은 개인정보예요. 외벽 송출에만 쓰고, 송출 직후 바로 지워요.</p>
+  <label class="agreeAll"><input type="checkbox" id="cAll"><span>모두 동의합니다</span></label>
+  <div class="terms">
+    <div class="term"><label><input type="checkbox" id="c1"><span><em>필수</em>개인정보(영상·문구) 수집·이용</span></label><button class="see" data-t="t1">보기</button></div>
+    <div class="term"><label><input type="checkbox" id="c2"><span><em>필수</em>외벽 공개 송출(초상 공개)</span></label><button class="see" data-t="t2">보기</button></div>
+    <div class="term"><label><input type="checkbox" id="c3"><span><em>필수</em>만 14세 이상입니다</span></label><button class="see" data-t="t3">보기</button></div>
+  </div>
+  <div class="grow"></div>
+  <p class="small">동의하지 않으면 참여할 수 없어요. 동의는 언제든 거부할 수 있고, 거부해도 공연 관람에는 영향이 없어요.</p>
+  <button class="btn" id="b-agree" disabled>동의하고 시작하기</button>
+</section>
+
+<!-- 약관 상세 -->
+<div class="sheetWrap" id="sheet"><div class="sheet">
+  <div class="sheetHd"><b id="sheetTitle"></b><button id="sheetX" aria-label="닫기">✕</button></div>
+  <div class="sheetBody" id="sheetBody"></div>
+  <button class="btn" id="sheetOk">확인하고 동의</button>
+</div></div>
+<template id="t1"><h3>개인정보 수집·이용 동의 (필수)</h3>
+  <table>
+    <tr><th>수집 항목</th><td>얼굴이 포함된 10초 셀피 영상, 새해 한마디(20자 이내)</td></tr>
+    <tr><th>이용 목적</th><td>「우리 새해 방명록」 외벽 송출, 송출 전 운영자 검수</td></tr>
+    <tr><th>보유 기간</th><td><b>송출 직후 즉시 파기</b> · 검수에서 반려되면 즉시 파기 · 미송출분도 행사 종료 즉시 파기</td></tr>
+    <tr><th>처리 위탁</th><td>클라우드 서버(Supabase, 서울 리전) — 영상 임시 보관·전달</td></tr>
+  </table>
+  <p>이름, 전화번호 등 다른 개인정보는 받지 않아요. 동의를 거부할 수 있으며, 거부하면 방명록 참여만 제한돼요.</p></template>
+<template id="t2"><h3>외벽 공개 송출 동의 (필수)</h3>
+  <p>보내주신 영상과 한마디는 검수 후 예술의전당 서예박물관 외벽에 약 20초간 공개 송출돼요.</p>
+  <p>송출 장면은 현장 관객의 촬영·SNS 게시나 행사 기록 영상에 담길 수 있어요. 이는 주최·운영 측이 통제할 수 없는 점 양해 부탁드려요.</p>
+  <p>부적절한 표현, 타인의 얼굴이 함께 담긴 영상, 광고성 내용은 송출되지 않고 즉시 파기돼요.</p></template>
+<template id="t3"><h3>만 14세 이상 확인 (필수)</h3>
+  <p>만 14세 미만 어린이의 개인정보를 받으려면 법정대리인(보호자)의 동의가 필요해요.</p>
+  <p>만 14세 미만은 보호자의 폰으로, 보호자와 함께 참여해 주세요.</p></template>
+
+<!-- 2. 새해 한마디 -->
+<section id="s-msg" class="screen bg">
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="label">STEP 1 / 2</div>
+  <h1>새해 한마디를<br>적어주세요</h1>
+  <p>영상과 함께 외벽에 표시돼요.</p>
+  <div class="chips">
+    <button class="chip">새해 복 많이 받으세요</button>
+    <button class="chip">우리 가족 건강하자</button>
+    <button class="chip">2027, 우리는 해!</button>
+    <button class="chip">올해도 함께해요</button>
+  </div>
+  <input type="text" id="msg" maxlength="20" placeholder="최대 20자" autocomplete="off">
+  <div class="count"><span id="cnt">0</span> / 20</div>
+  <div class="msgPrev hand" id="msgPrev"></div>
+  <div class="grow"></div>
+  <button class="btn" id="b-msg" disabled>다음 · 촬영하기 (STEP 2)</button>
+</section>
+
+<!-- 3. 촬영 -->
+<section id="s-cam" class="screen">
+  <div class="stage">
+    <video id="live" playsinline muted autoplay></video>
+    <div class="frame"></div>
+    <div class="ovTop"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+    <div class="hint" id="hint">얼굴을 액자 가운데에 맞추고 버튼을 눌러주세요</div>
+    <div class="timer" id="timer"></div>
+    <div class="ovMsg hand" id="liveMsg"></div>
+    <div class="bar" id="bar"></div>
+    <div class="big" id="big"></div>
+    <div class="controls"><button class="rec" id="b-rec" aria-label="녹화"></button></div>
+  </div>
+</section>
+
+<!-- 4. 확인 -->
+<section id="s-review" class="screen">
+  <div class="stage">
+    <video id="review" playsinline muted autoplay loop></video>
+    <div class="frame"></div>
+    <div class="ovTop"><span class="pill">미리보기</span><span class="year">2027</span></div>
+    <div class="ovMsg hand" id="revMsg"></div>
+    <div class="controls" style="flex-direction:column">
+      <div class="row" style="width:100%">
+        <button class="btn ghost" id="b-retake">다시 찍기</button>
+        <button class="btn gold" id="b-send">외벽으로 보내기</button>
+      </div>
+      <a id="save" style="color:#cfe0f2;font-size:13px;margin-top:4px">내 폰에 저장</a>
+    </div>
+  </div>
+</section>
+
+<!-- 5. 전송·대기 -->
+<section id="s-wait" class="screen bg">
+  <div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div>
+  <div class="grow"></div>
+  <div class="card">
+    <div id="w-icon" class="spinner"></div>
+    <div class="state" id="w-state">전송 중…</div>
+    <p id="w-desc">잠시만 기다려 주세요.</p>
+    <div class="err" id="w-err"></div>
+  </div>
+  <div class="grow"></div>
+  <button class="btn" id="b-retry" style="display:none">다시 보내기</button>
+  <button class="btn ghost" id="b-again" style="display:none;margin-top:10px">새로 참여하기</button>
+  <div class="foot"><img src="assets/ci_white.png" alt="우리금융그룹"></div>
+</section>
+
+<div class="mode" id="mode"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const ENDPOINT = ''; // ← Apps Script 웹 앱 URL 붙여넣기 (비워두면 로컬 데모 모드)
+const SB_URL = 'https://jmsnadveqmduzprrevlb.supabase.co';  // Supabase 프로젝트 URL
+const SB_KEY = 'sb_publishable_5tBAE0E6yw9PGkGmeXj0Yw_LMEVIMPw';  // 공개용(publishable) 키 — RLS로 보호되므로 코드에 넣어도 됨
+/*RELAY*/
+
+const $ = (id) => document.getElementById(id);
+const HEART = '<svg class="heart" viewBox="0 0 100 92"><path d="M50 86 C22 64 6 48 6 28 C6 14 17 4 30 4 C40 4 47 10 50 18 C53 10 60 4 70 4 C83 4 94 14 94 28 C94 48 78 64 50 86 Z"/></svg>';
+const hand = (el, t) => { el.textContent = t; if (t) el.insertAdjacentHTML('beforeend', HEART); };
+const show = (id) => { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); };
+if (!Relay) {
+  document.body.innerHTML = '<section class="screen bg on"><div class="hd"><span class="pill">「우리 새해 방명록」</span><span class="year">2027</span></div><div class="grow"></div><div class="card"><div class="state">연결 정보가 없어요</div><p>현장에 안내된 QR 코드로 다시 접속해 주세요.</p></div><div class="grow"></div></section>';
+  throw new Error('no relay');
+}
+$('mode').textContent = Relay.mode === 'local' ? '로컬 데모 모드' : '';
+
+const REC_SEC = 10;
+let stream = null, recorder = null, chunks = [], recBlob = null, recMime = '', message = '', pollTimer = null;
+
+// ---- 1. 동의
+const checks = ['c1', 'c2', 'c3'].map($);
+const syncAgree = () => { const all = checks.every(x => x.checked); $('cAll').checked = all; $('b-agree').disabled = !all; };
+checks.forEach(c => c.onchange = syncAgree);
+$('cAll').onchange = () => { checks.forEach(c => c.checked = $('cAll').checked); syncAgree(); };
+$('b-start').onclick = () => show('s-consent');
+$('b-agree').onclick = () => show('s-msg');
+let sheetFor = null;
+const closeSheet = () => $('sheet').classList.remove('on');
+document.querySelectorAll('.see').forEach(b => b.onclick = () => {
+  const t = $(b.dataset.t); sheetFor = b.closest('.term').querySelector('input');
+  $('sheetBody').innerHTML = t.innerHTML; $('sheetTitle').textContent = '약관 보기';
+  $('sheet').classList.add('on');
+});
+$('sheetX').onclick = closeSheet;
+$('sheet').onclick = (e) => { if (e.target === $('sheet')) closeSheet(); };
+$('sheetOk').onclick = () => { if (sheetFor) sheetFor.checked = true; syncAgree(); closeSheet(); };
+
+// ---- 2. 한마디
+const msgEl = $('msg');
+const syncMsg = () => { $('cnt').textContent = msgEl.value.length; $('b-msg').disabled = !msgEl.value.trim(); hand($('msgPrev'), msgEl.value.trim()); };
+msgEl.oninput = syncMsg;
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => { msgEl.value = c.textContent; syncMsg(); });
+$('b-msg').onclick = async () => { message = msgEl.value.trim(); await openCamera(); };
+
+// ---- 3. 촬영
+function pickMime() {
+  const list = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+  return list.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+async function openCamera() {
+  try {
+    stream = stream || await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 540 }, height: { ideal: 960 }, frameRate: { ideal: 30 } }, audio: false });
+    $('live').srcObject = stream;
+    hand($('liveMsg'), message); $('hint').style.display = '';
+    $('timer').textContent = '';
+    show('s-cam');
+  } catch (e) {
+    alert('카메라를 켤 수 없어요.\n브라우저 설정에서 카메라 권한을 허용해 주세요.\n(카카오톡·네이버 앱 안에서 열었다면 기본 브라우저로 열어주세요)');
+  }
+}
+$('b-rec').onclick = async () => {
+  if (recorder && recorder.state === 'recording') return;
+  $('hint').style.display = 'none';
+  for (const n of [3, 2, 1]) { $('big').textContent = n; await sleep(800); }
+  $('big').textContent = '';
+  startRecording();
+};
+function startRecording() {
+  recMime = pickMime();
+  chunks = [];
+  try {
+    const VBR = 900000; // 0.9Mbps → 10초 약 1.1MB
+    recorder = new MediaRecorder(stream, recMime ? { mimeType: recMime, videoBitsPerSecond: VBR } : { videoBitsPerSecond: VBR });
+  } catch (e) { alert('이 브라우저는 녹화를 지원하지 않아요.'); return; }
+  recMime = (recorder.mimeType || recMime || 'video/webm').split(';')[0];
+  recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    recBlob = new Blob(chunks, { type: recMime });
+    const url = URL.createObjectURL(recBlob);
+    $('review').src = url;
+    hand($('revMsg'), message);
+    const a = $('save'); a.href = url; a.download = 'woori-newyear' + (recMime.includes('mp4') ? '.mp4' : '.webm');
+    $('b-rec').classList.remove('on');
+    show('s-review');
+  };
+  recorder.start(500);
+  $('b-rec').classList.add('on');
+  const t0 = performance.now();
+  const tick = () => {
+    const el = (performance.now() - t0) / 1000;
+    $('bar').style.width = Math.min(100, el / REC_SEC * 100) + '%';
+    $('timer').textContent = Math.max(0, Math.ceil(REC_SEC - el)) + '초';
+    if (el >= REC_SEC) { recorder.stop(); $('bar').style.width = '0'; $('timer').textContent = ''; return; }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ---- 4. 확인
+$('b-retake').onclick = () => { URL.revokeObjectURL($('review').src); recBlob = null; openCamera(); };
+$('b-send').onclick = send;
+
+// ---- 5. 전송·대기
+async function send() {
+  if (!recBlob) return;
+  setWait('spinner', '전송 중…', `영상 ${(recBlob.size / 1024 / 1024).toFixed(1)}MB를 보내고 있어요.`);
+  $('b-retry').style.display = 'none'; $('w-err').textContent = '';
+  show('s-wait');
+  try {
+    const r = await Relay.upload(recBlob, recMime, message);
+    localStorage.setItem('woori-gb', JSON.stringify({ id: r.id, relay: RELAY_KEY }));
+    stopCamera();
+    watch(r.id);
+  } catch (e) {
+    setWait('spinner', '전송 실패', '네트워크가 혼잡해요. 잠시 후 다시 보내주세요.');
+    $('w-icon').className = '';
+    $('w-err').textContent = e.message;
+    $('b-retry').style.display = 'block';
+  }
+}
+$('b-retry').onclick = send;
+$('b-again').onclick = () => { localStorage.removeItem('woori-gb'); location.reload(); };
+
+function watch(id) {
+  clearInterval(pollTimer);
+  let fails = 0;
+  const check = async () => {
+    try {
+      const s = await Relay.status(id);
+      fails = 0;
+      const sideTxt = s.side === 'L' ? '왼쪽' : s.side === 'R' ? '오른쪽' : '';
+      if (s.status === 'pending') setWait('spinner', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.');
+      else if (s.status === 'approved') setWait('spinner', `송출 대기 ${s.position}번째`, `예상 약 ${Math.max(1, Math.ceil(s.position * 20 / 2 / 60))}분 후 서예박물관 외벽에 나와요.`);
+      else if (s.status === 'playing') setWait('dot', '지금 외벽에 나오고 있어요!', `서예박물관 ${sideTxt} 벽을 봐주세요 ✨`);
+      else if (s.status === 'played') { done('송출 완료', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.', 'heart'); }
+      else if (s.status === 'rejected') { done('송출되지 않았어요', '검수 기준에 맞지 않아 영상이 파기되었어요. 다시 참여해 주세요.'); }
+    } catch (e) {
+      if (/없음/.test(e.message)) { done('접수 기록을 찾을 수 없어요', '처음부터 다시 참여해 주세요.'); return; }
+      if (++fails >= 5) { // 네트워크가 계속 안 될 때: 상태는 계속 확인하되 탈출 버튼 표시
+        $('w-err').textContent = '연결이 불안정해요. 잠시 후 자동으로 다시 확인합니다.';
+        $('b-again').style.display = 'block';
+      }
+    }
+  };
+  check();
+  if (Relay.subscribe && !watch.live) watch.live = Relay.subscribe(() => watch.check && watch.check());
+  watch.check = check;
+  pollTimer = setInterval(check, watch.live ? 5000 : 3000);
+}
+function done(title, desc, icon = '') {
+  clearInterval(pollTimer);
+  watch.check = null; // 실시간 알림이 와도 더 이상 확인하지 않음
+  localStorage.removeItem('woori-gb');
+  $('w-err').textContent = '';
+  setWait(icon, title, desc);
+  $('b-again').style.display = 'block';
+}
+function setWait(icon, state, desc) {
+  const ic = $('w-icon'); ic.className = icon === 'heart' ? 'done' : icon; ic.innerHTML = icon === 'heart' ? HEART : '';
+  $('w-state').textContent = state; $('w-desc').textContent = desc;
+}
+function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// 페이지를 닫았다 다시 열어도 대기 화면 복구
+localStorage.removeItem('woori-gb-id'); // 이전 버전 기록 정리
+let saved = null;
+try { saved = JSON.parse(localStorage.getItem('woori-gb') || 'null'); } catch (e) {}
+if (saved && saved.relay === RELAY_KEY && saved.id) {
+  setWait('spinner', '접수 상태 확인 중…', '잠시만 기다려 주세요.');
+  show('s-wait'); watch(saved.id);
+} else if (saved) localStorage.removeItem('woori-gb'); // 다른 중간지점(또는 로컬 모드) 기록은 버림
+</script>
+</body>
+</html>

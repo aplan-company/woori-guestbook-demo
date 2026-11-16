@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>검수 콘솔 · 우리 새해 방명록</title>
+<style>
+  :root { --navy:#0B2545; --blue:#007BC8; --sky:#45A9FE; --gold:#E3C35A; --red:#E5484D; --green:#2EB872; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#0e1a2b; color:#e8eef6; font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  header { display:flex; align-items:center; gap:20px; padding:14px 22px; background:var(--navy); position:sticky; top:0; z-index:2; }
+  header h1 { font-size:18px; margin:0; }
+  .stat { font-size:14px; color:#a9c1dd; }
+  .stat b { color:#fff; font-size:18px; margin-left:4px; }
+  .help { margin-left:auto; font-size:13px; color:#a9c1dd; }
+  kbd { background:#24395a; border-radius:4px; padding:2px 7px; color:#fff; }
+  main { padding:20px 22px; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+  .card { background:#16263d; border-radius:14px; overflow:hidden; border:3px solid transparent; }
+  .card.focus { border-color:var(--gold); }
+  .card video { width:100%; aspect-ratio:9/16; object-fit:cover; background:#000; display:block; transform:scaleX(-1); }
+  .meta { padding:10px 12px; }
+  .msg { font-size:16px; font-weight:700; min-height:22px; }
+  .time { font-size:12px; color:#8aa2c0; margin-top:3px; }
+  .acts { display:flex; gap:8px; padding:0 12px 12px; }
+  .acts button { flex:1; border:0; border-radius:10px; padding:11px; font-size:15px; font-weight:700; color:#fff; cursor:pointer; }
+  .ok { background:var(--green); } .no { background:var(--red); }
+  .empty { grid-column:1/-1; text-align:center; color:#6f86a6; padding:80px 0; font-size:16px; }
+  .mode { font-size:12px; color:#6f86a6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>검수 콘솔</h1>
+  <span class="stat">검수 대기<b id="n-pending">0</b></span>
+  <span class="stat">송출 대기<b id="n-approved">0</b></span>
+  <span class="mode" id="mode"></span>
+  <span class="help">맨 앞 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
+</header>
+<main id="list"><div class="empty">검수 대기 중인 영상이 없어요</div></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const ENDPOINT = ''; // ← Apps Script 웹 앱 URL (비워두면 로컬 데모 모드)
+const SB_URL = 'https://jmsnadveqmduzprrevlb.supabase.co';  // Supabase 프로젝트 URL
+const SB_KEY = 'sb_publishable_5tBAE0E6yw9PGkGmeXj0Yw_LMEVIMPw';  // 공개용(publishable) 키 — RLS로 보호되므로 코드에 넣어도 됨
+/*RELAY*/
+
+if (!Relay) { document.body.innerHTML = '<p style="color:#fff;font:20px sans-serif;padding:40px">연결 정보가 없어요. 주소 뒤에 ?api=웹앱URL 을 붙여 열어주세요. (같은 PC 테스트는 ?local)</p>'; throw new Error('no relay'); }
+const list = document.getElementById('list');
+document.getElementById('mode').textContent = { local: '로컬 데모 모드', 'apps-script': 'Apps Script 연결', supabase: 'Supabase 연결' }[Relay.mode];
+const cards = new Map(); // id → {el, url}
+let busy = false, again = false;
+
+async function refresh() {
+  if (busy) { again = true; return; }
+  busy = true;
+  try {
+    const items = await Relay.list('pending,approved');
+    const pending = items.filter(x => x.status === 'pending'), approved = items.filter(x => x.status === 'approved');
+    document.getElementById('n-pending').textContent = pending.length;
+    document.getElementById('n-approved').textContent = approved.length;
+    const ids = new Set(pending.map(p => p.id));
+    for (const [id, c] of cards) if (!ids.has(id)) removeCard(id);
+    for (const p of pending) if (!cards.has(p.id)) addCard(p);
+    updateFocus();
+  } catch (e) { console.warn(e); }
+  busy = false;
+  if (again) { again = false; refresh(); }
+}
+
+function addCard(p) {
+  list.querySelector('.empty')?.remove();
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.innerHTML = `<video muted loop playsinline autoplay></video>
+    <div class="meta"><div class="msg"></div><div class="time">${new Date(p.createdAt).toLocaleTimeString('ko-KR')} · #${p.id}</div></div>
+    <div class="acts"><button class="ok">승인</button><button class="no">반려</button></div>`;
+  el.querySelector('.msg').textContent = p.message || '(문구 없음)';
+  el.querySelector('.ok').onclick = () => decide(p.id, 'approved');
+  el.querySelector('.no').onclick = () => decide(p.id, 'rejected');
+  list.appendChild(el);
+  const c = { el, url: '' };
+  cards.set(p.id, c);
+  Relay.getFile(p.id).then(blob => {
+    c.url = URL.createObjectURL(blob);
+    el.querySelector('video').src = c.url;
+  }).catch(() => { el.querySelector('.time').textContent += ' · 영상 불러오기 실패'; });
+}
+function removeCard(id) {
+  const c = cards.get(id); if (!c) return;
+  if (c.url) URL.revokeObjectURL(c.url);
+  c.el.remove(); cards.delete(id);
+  if (!cards.size) list.innerHTML = '<div class="empty">검수 대기 중인 영상이 없어요</div>';
+}
+function updateFocus() {
+  let first = true;
+  for (const c of cards.values()) { c.el.classList.toggle('focus', first); first = false; }
+}
+async function decide(id, status) {
+  removeCard(id); updateFocus();
+  try { await Relay.setStatus(id, status); } catch (e) { alert('처리 실패: ' + e.message); }
+  refresh();
+}
+document.addEventListener('keydown', e => {
+  const first = cards.keys().next().value;
+  if (!first) return;
+  if (e.key === 'a' || e.key === 'A') decide(first, 'approved');
+  if (e.key === 'r' || e.key === 'R') decide(first, 'rejected');
+});
+
+refresh();
+const live = Relay.subscribe ? Relay.subscribe(refresh) : false; // 실시간 알림 지원 시 즉시 갱신
+setInterval(refresh, live ? 5000 : 1500);
+</script>
+</body>
+</html>
