@@ -279,7 +279,6 @@
   .photoOnly { display:none; position:absolute; left:20px; right:20px; bottom:calc(132px + env(safe-area-inset-bottom)); text-align:center; font-size:13px; color:#fff;
     padding:10px 14px; border-radius:14px; background:rgba(0,0,0,.4); backdrop-filter:blur(12px); }
   .photoOnly b { color:#8fe6ff; }
-  body.forcePhoto .photoOnly { display:block; }
   body.capPhoto .rec { background:radial-gradient(circle at 50% 38%, #fff 0%, #fff 55%, #dbeeff 100%); }
   body.capPhoto .rec::after { display:none; }
   .flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; }
@@ -404,7 +403,6 @@
     <div class="big" id="big"></div>
     <div class="flash" id="shot"></div>
     <div class="modeSw" id="modeSw"><button data-m="video" class="on">영상 5초</button><button data-m="photo">사진</button><i></i></div>
-    <div class="photoOnly" id="photoOnly">지금은 접속이 많아 <b>사진</b>으로만 참여할 수 있어요</div>
     <div class="controls"><button class="rec" id="b-rec" aria-label="촬영"></button></div>
   </div>
 </section>
