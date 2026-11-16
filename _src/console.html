@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>검수 콘솔 · 우리 새해 방명록</title>
+<title>검수 콘솔 · 우리 새해 방명록 · 2027 새해, 우리는 해</title>
 <style>
   @font-face { font-family:"Wooridaum"; font-weight:700; src:url(assets/fonts/WooridaumB.woff2) format("woff2"); font-display:swap; }
   :root { --blue:#1673ff; --sky:#39b8ff; --cyan:#19c3ff; --ink:#0a1a33; --muted:#5a6b80; --line:#e3ebf4; --red:#ff4d5e;
@@ -56,6 +56,12 @@
   .empty i { width:90px; height:90px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff 0, #c9f4ff 30%, #39b8ff 70%, #1673ff 100%);
     box-shadow:0 20px 60px rgba(22,115,255,.35); animation: breathe 2.6s ease-in-out infinite; }
   @keyframes breathe { 50% { transform:scale(.9); } }
+  .brandbar { position:fixed; left:28px; bottom:20px; z-index:3; display:flex; align-items:center; gap:14px; padding:10px 18px; border-radius:999px;
+    background:rgba(255,255,255,.85); backdrop-filter:blur(12px); box-shadow:0 0 0 1px var(--line), 0 10px 30px rgba(22,115,255,.12); }
+  .brandbar b { font-family:"Wooridaum",sans-serif; font-size:15px; color:#3aa8ff; letter-spacing:-.01em; }
+  .brandbar img { height:15px; display:block; } .brandbar img.sac { height:17px; }
+  .brandbar i { width:1px; height:14px; background:var(--ink); opacity:.22; }
+  main { padding-bottom:90px !important; }
   .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:9; background:var(--ink); color:#fff; padding:12px 18px; border-radius:999px; font-size:14px; opacity:0; transition:opacity .3s; }
   .toast.on { opacity:1; }
 </style>
@@ -74,6 +80,7 @@
 </header>
 <main id="list"><div class="empty"><i></i>검수 대기 중인 영상이 없어요</div></main>
 <div class="toast" id="toast"></div>
+<div class="brandbar"><b>2027 새해, 우리는 해</b><i></i><img src="assets/ci_blue.png" alt="우리금융그룹"><i></i><img class="sac" src="assets/sac_color.png" alt="예술의전당"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
