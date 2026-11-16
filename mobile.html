@@ -641,7 +641,7 @@ function localRelay() {
   };
 }
 
-const DEFAULT_CONFIG = { capture_mode: 'both' };
+const DEFAULT_CONFIG = { capture_mode: 'both', review_mode: 'on' }; // review_mode: on(검수) | off(검수 없이 바로 송출)
 function mimeExt(m) { return m.includes('mp4') ? 'mp4' : m.includes('webm') ? 'webm' : m.includes('png') ? 'png' : m.includes('webp') ? 'webp' : m.includes('jpeg') || m.includes('jpg') ? 'jpg' : 'bin'; }
 
 function blobToBase64(blob) {
@@ -769,7 +769,9 @@ function setCapMode(m) {
   $('b-rec').setAttribute('aria-label', capMode === 'photo' ? '사진 찍기' : '녹화');
 }
 $('modeSw').querySelectorAll('button').forEach(b => b.onclick = () => setCapMode(b.dataset.m));
+let reviewOff = false;
 function applyConfig(c) {
+  reviewOff = (c && c.review_mode) === 'off';
   forcePhoto = (c && c.capture_mode) === 'photo';
   document.body.classList.toggle('forcePhoto', forcePhoto);
   setCapMode(forcePhoto ? 'photo' : capMode);
@@ -868,7 +870,7 @@ function watch(id) {
       const s = await Relay.status(id);
       fails = 0;
       const sideTxt = s.side === 'L' ? '왼쪽' : s.side === 'R' ? '오른쪽' : '';
-      if (s.status === 'pending') setWait('scan', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.');
+      if (s.status === 'pending') { if (reviewOff) setWait('scan', '송출 준비 중이에요', '곧 외벽 송출 순서를 알려드려요.'); else setWait('scan', '검수 중이에요', '검수가 끝나면 외벽 송출 순서를 알려드려요.'); }
       else if (s.status === 'approved') setWait('float', `송출 대기 ${s.position}번째`, `예상 약 ${Math.max(1, Math.ceil(s.position * 20 / 2 / 60))}분 후 서예박물관 외벽에 나와요.`);
       else if (s.status === 'playing') setWait('dot', '지금 외벽에 빛나고 있어요', `서예박물관 ${sideTxt} 벽을 봐주세요`);
       else if (s.status === 'played') { done('당신의 빛이 더해졌어요', '새해 복 많이 받으세요! 영상은 송출 직후 파기되었어요.', 'heart'); }

@@ -32,12 +32,18 @@
   .card.no-out { transform:scale(.8) rotate(-4deg); opacity:0; }
   .card .media { width:100%; aspect-ratio:9/16; object-fit:cover; background:#0a1a33; display:block; transform:scaleX(-1); }
   .kind { position:absolute; right:12px; top:12px; z-index:2; font:700 10px/1 var(--mono); letter-spacing:.12em; color:#fff; background:rgba(10,26,51,.55); padding:6px 8px; border-radius:999px; backdrop-filter:blur(8px); }
+  header > * { white-space:nowrap; flex-shrink:0; }
   .mswitch { display:flex; align-items:center; gap:10px; border:0; cursor:pointer; padding:8px 8px 8px 14px; border-radius:999px; background:rgba(255,255,255,.18); color:#fff; font-size:13px; font-weight:700; backdrop-filter:blur(10px); }
   .mswitch .tg { position:relative; width:42px; height:24px; border-radius:999px; background:rgba(255,255,255,.35); transition:background .3s; }
   .mswitch .tg::after { content:""; position:absolute; left:3px; top:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .35s var(--spring); }
   .mswitch.on { background:#fff; color:var(--blue); box-shadow:0 8px 24px rgba(10,26,51,.25); }
   .mswitch.on .tg { background:linear-gradient(135deg,#39b8ff,#1673ff); }
   .mswitch.on .tg::after { transform:translateX(18px); }
+  .mswitch.warn { background:#ff4d5e; color:#fff; box-shadow:0 8px 24px rgba(255,77,94,.35); }
+  .mswitch.warn .tg { background:rgba(255,255,255,.35); }
+  .offbox { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:14px; padding:100px 0; color:var(--muted); font-size:16px; text-align:center; }
+  .offbox b { font-size:26px; color:var(--ink); letter-spacing:-.02em; }
+  .offbox i { width:90px; height:90px; border-radius:26px; background:linear-gradient(135deg,#39b8ff,#1673ff); box-shadow:0 20px 60px rgba(22,115,255,.35); animation: breathe 2.6s ease-in-out infinite; }
   .meta { padding:12px 14px 6px; }
   .msg { font-family:"Wooridaum",sans-serif; font-size:17px; font-weight:700; min-height:22px; letter-spacing:-.01em; }
   .time { font:500 11px/1.4 var(--mono); color:var(--muted); margin-top:5px; letter-spacing:.04em; }
@@ -61,6 +67,7 @@
   <h1>검수 콘솔</h1>
   <span class="stat">검수 대기<b id="n-pending">0</b></span>
   <span class="stat">송출 대기<b id="n-approved">0</b></span>
+  <button class="mswitch" id="rswitch" title="OFF로 두면 검수 없이 접수 즉시 외벽 송출 대기열로 넘어갑니다"><span id="rlabel">검수 ON</span><span class="tg"></span></button>
   <button class="mswitch" id="mswitch" title="네트워크가 혼잡할 때 모든 폰을 사진 모드로만 촬영하게 합니다"><span id="mlabel">사진 전용 모드 OFF</span><span class="tg"></span></button>
   <span class="mode" id="mode"></span>
   <span class="help">NEXT 카드: <kbd>A</kbd> 승인 · <kbd>R</kbd> 반려(즉시 파기)</span>
@@ -254,7 +261,7 @@ function localRelay() {
   };
 }
 
-const DEFAULT_CONFIG = { capture_mode: 'both' };
+const DEFAULT_CONFIG = { capture_mode: 'both', review_mode: 'on' }; // review_mode: on(검수) | off(검수 없이 바로 송출)
 function mimeExt(m) { return m.includes('mp4') ? 'mp4' : m.includes('webm') ? 'webm' : m.includes('png') ? 'png' : m.includes('webp') ? 'webp' : m.includes('jpeg') || m.includes('jpg') ? 'jpg' : 'bin'; }
 
 function blobToBase64(blob) {
@@ -281,15 +288,26 @@ async function refresh() {
     const pending = items.filter(x => x.status === 'pending'), approved = items.filter(x => x.status === 'approved');
     document.getElementById('n-pending').textContent = pending.length;
     document.getElementById('n-approved').textContent = approved.length;
+    if (reviewOff) { // 검수 OFF: 들어오는 대로 자동 승인 (송출창이 꺼져 있어도 대기열로)
+      for (const p of pending) if (!autoOk.has(p.id)) { autoOk.add(p.id); Relay.setStatus(p.id, 'approved').catch(() => autoOk.delete(p.id)); }
+      for (const id of [...cards.keys()]) removeCard(id);
+      showOff(); return;
+    }
+    list.querySelector('.offbox')?.remove();
+    if (!cards.size && !list.querySelector('.empty') && !pending.length) list.innerHTML = '<div class="empty"><i></i>검수 대기 중인 영상이 없어요</div>';
     const ids = new Set(pending.map(p => p.id));
     for (const [id, c] of cards) if (!ids.has(id)) removeCard(id);
     for (const p of pending) if (!cards.has(p.id)) addCard(p);
     updateFocus();
   } catch (e) { console.warn(e); }
-  busy = false;
+  finally { busy = false; }
   if (again) { again = false; refresh(); }
 }
 
+function showOff() {
+  if (list.querySelector('.offbox')) return;
+  list.innerHTML = '<div class="offbox"><i></i><b>검수 OFF</b>접수된 영상·사진이 검수 없이 바로 외벽 송출 대기열로 넘어가요.<br>다시 검수하려면 상단 「검수」 스위치를 켜주세요.</div>';
+}
 function addCard(p) {
   list.querySelector('.empty')?.remove();
   const el = document.createElement('div');
@@ -335,6 +353,31 @@ document.addEventListener('keydown', e => {
   if (e.key === 'r' || e.key === 'R') decide(first, 'rejected');
 });
 
+// ---- 검수 모드 (ON: 승인 후 송출 · OFF: 접수 즉시 송출)
+let reviewOff = false;
+const autoOk = new Set();
+function renderReview(cfg) {
+  const was = reviewOff;
+  reviewOff = ((cfg && cfg.review_mode) || 'on') === 'off';
+  const sw = document.getElementById('rswitch');
+  sw.classList.toggle('on', !reviewOff); sw.classList.toggle('warn', reviewOff);
+  document.getElementById('rlabel').textContent = reviewOff ? '검수 OFF' : '검수 ON';
+  if (was !== reviewOff) { if (!reviewOff) list.innerHTML = ''; refresh(); }
+}
+document.getElementById('rswitch').onclick = async () => {
+  const next = reviewOff ? 'on' : 'off';
+  if (next === 'off' && !confirmOff()) return;
+  try { await Relay.setConfig('review_mode', next); renderReview({ review_mode: next });
+    toast(next === 'off' ? '검수 없이 바로 송출해요 (대기 중이던 항목도 승인됨)' : '검수를 다시 시작해요'); }
+  catch (e) { toast('전환 실패: ' + e.message + (STAFF_KEY ? '' : ' (주소에 ?key= 필요)')); }
+};
+// 실수로 끄지 않도록 2초 안에 한 번 더 눌러야 OFF
+function confirmOff() {
+  if (confirmOff.armed) { confirmOff.armed = false; return true; }
+  confirmOff.armed = true; toast('한 번 더 누르면 검수가 꺼지고 바로 송출돼요');
+  setTimeout(() => confirmOff.armed = false, 2000); return false;
+}
+
 // ---- 사진 전용 모드 (모든 폰 접속에 적용)
 let capMode = 'both';
 function renderMode(cfg) {
@@ -349,8 +392,10 @@ document.getElementById('mswitch').onclick = async () => {
     toast(next === 'photo' ? '모든 폰이 사진 모드로만 촬영해요' : '영상·사진 모두 촬영할 수 있어요'); }
   catch (e) { toast('전환 실패: ' + e.message + (STAFF_KEY ? '' : ' (주소에 ?key= 필요)')); }
 };
-Relay.getConfig && Relay.getConfig().then(renderMode);
-Relay.subscribeConfig && Relay.subscribeConfig(renderMode);
+const applyCfg = (c) => { renderMode(c); renderReview(c); };
+Relay.getConfig && Relay.getConfig().then(applyCfg);
+Relay.subscribeConfig && Relay.subscribeConfig(applyCfg);
+setInterval(() => Relay.getConfig && Relay.getConfig().then(applyCfg).catch(() => {}), 15000);
 
 refresh();
 const live = Relay.subscribe ? Relay.subscribe(refresh) : false; // 실시간 알림 지원 시 즉시 갱신

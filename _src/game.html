@@ -292,6 +292,8 @@ const ready = new Map();   // id → objectURL (미리 받은 영상)
 const loading = new Set();
 let pendingList = [];      // 아직 검수 중인 항목 (미리 받기 대상)
 let paused = false, played = 0, lastErr = '';
+let reviewOff = false;     // 검수 OFF: 접수 즉시 송출 대기열로
+const autoOk = new Set();
 
 let polling = false, pollAgain = false;
 async function poll() {
@@ -301,7 +303,10 @@ async function poll() {
   try {
     const items = await Relay.list('pending,approved');
     const active = new Set(items.map(x => x.id));
-    for (const it of items) if (it.status === 'approved' && !seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+    for (const it of items) {
+      if (it.status === 'pending' && reviewOff && !autoOk.has(it.id)) { autoOk.add(it.id); it.status = 'approved'; Relay.setStatus(it.id, 'approved').catch(() => autoOk.delete(it.id)); }
+      if (it.status === 'approved' && !seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+    }
     pendingList = items.filter(x => x.status === 'pending');
     // 반려되었거나 사라진 항목의 미리 받은 영상은 즉시 폐기
     for (const [id, url] of ready) if (!active.has(id) && !queue.some(q => q.id === id)) { URL.revokeObjectURL(url); ready.delete(id); }
@@ -391,9 +396,14 @@ addEventListener('keydown', e => {
   if (k === 'r' && e.shiftKey) { lights = 0; try { localStorage.setItem(LS_KEY, 0); } catch (err) {} renderLights(false); } // Shift+R: 모인 빛 초기화
 });
 setInterval(() => {
-  hud.textContent = `mode: ${Relay.mode}${paused ? '  [일시정지]' : ''}  lights: ${lights} (Shift+R 초기화)\nqueue: ${queue.length}  pending: ${pendingList.length}  ready: ${ready.size}  played: ${played}\n` +
+  hud.textContent = `mode: ${Relay.mode}${paused ? '  [일시정지]' : ''}  lights: ${lights} (Shift+R 초기화)\nreview: ${reviewOff ? 'OFF(바로 송출)' : 'ON'}  queue: ${queue.length}  pending: ${pendingList.length}  ready: ${ready.size}  played: ${played}\n` +
     panels.map(p => `${p.side}: ${p.item ? '#' + p.item.id : '-'}`).join('  ') + (lastErr ? `\nerr: ${lastErr}` : '');
 }, 500);
+
+function applyReview(c) { const was = reviewOff; reviewOff = (c && c.review_mode) === 'off'; if (reviewOff && !was) poll(); }
+Relay.getConfig && Relay.getConfig().then(applyReview).catch(() => {});
+Relay.subscribeConfig && Relay.subscribeConfig(applyReview);
+setInterval(() => Relay.getConfig && Relay.getConfig().then(applyReview).catch(() => {}), 15000);
 
 document.fonts && document.fonts.load('100px NanumPen'); // 손글씨 폰트 미리 받기
 poll();

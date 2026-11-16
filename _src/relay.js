@@ -179,7 +179,7 @@ function localRelay() {
   };
 }
 
-const DEFAULT_CONFIG = { capture_mode: 'both' };
+const DEFAULT_CONFIG = { capture_mode: 'both', review_mode: 'on' }; // review_mode: on(검수) | off(검수 없이 바로 송출)
 function mimeExt(m) { return m.includes('mp4') ? 'mp4' : m.includes('webm') ? 'webm' : m.includes('png') ? 'png' : m.includes('webp') ? 'webp' : m.includes('jpeg') || m.includes('jpg') ? 'jpg' : 'bin'; }
 
 function blobToBase64(blob) {
