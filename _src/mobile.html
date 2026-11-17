@@ -15,6 +15,7 @@
   body { overflow:hidden; }
 
   /* ---------- 장면을 이끄는 도형 레이어 ---------- */
+  @property --flat { syntax:'<color>'; inherits:true; initial-value:#1673ff; }
   #fx { position:fixed; inset:0; overflow:hidden; pointer-events:none; z-index:0;
     background: linear-gradient(180deg, #ffffff 0%, #f4f9ff 70%, #eaf4ff 100%); }
   :root { --cy:42vh; --top: calc(env(safe-area-inset-top) + 74px); --spring: cubic-bezier(.68,-0.18,.22,1.18);
@@ -50,26 +51,27 @@
     --grad: radial-gradient(60% 60% at 30% 25%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 60%),
             linear-gradient(135deg, #8fe6ff 0%, #39b8ff 25%, #1673ff 55%, #0b5bd6 75%, #5fd0ff 100%); }
   .b2 { --flat:#19c3ff; --grad: linear-gradient(135deg,#c9f4ff,#19c3ff); width:14vw; height:14vw; border-radius:7vw; left:76vw; top:40vw; }
-  .ring { position:absolute; left:12vw; top:calc(var(--cy) - 38vw); width:76vw; height:76vw; border-radius:50%; border:1px solid rgba(22,115,255,.18);
-    opacity:0; transform:scale(.8); transition:opacity .6s, transform 1.1s var(--spring); animation: spin 14s linear infinite; }
-  .ring::after { content:""; position:absolute; top:-5px; left:50%; width:10px; height:10px; margin-left:-5px; border-radius:50%; background:#19c3ff; box-shadow:0 0 12px #19c3ff; }
-  .lines { position:absolute; left:5vw; top:calc(var(--cy) - 45vw); width:90vw; height:90vw; opacity:0; transition:opacity .8s; overflow:visible; }
-  .lines path { fill:none; stroke:url(#lg); stroke-width:.7; stroke-linecap:round; stroke-dasharray:60 240; animation: dash 6s linear infinite; }
-  .lines path:nth-child(2) { animation-duration:8s; animation-direction:reverse; stroke-width:.5; }
-  .lines path:nth-child(3) { animation-duration:11s; stroke-width:.4; opacity:.7; }
-  @keyframes dash { to { stroke-dashoffset:-300; } }
-  @keyframes spin { to { transform:rotate(360deg); } }
   .pulse { position:absolute; left:50%; top:var(--cy); width:0; height:0; opacity:0; transition:opacity .6s; }
-  .pulse i { position:absolute; left:-28vw; top:-28vw; width:56vw; height:56vw; border-radius:50%; border:2px solid rgba(57,184,255,.7); opacity:0; }
+  /* 송출 중: 선 대신 '면'으로 번지는 빛 물결 + 원에서 맺혀 떠오르는 빛 방울 */
+  .pulse i { position:absolute; left:-30vw; top:-30vw; width:60vw; height:60vw; border-radius:50%; opacity:0;
+    background: radial-gradient(circle, rgba(143,230,255,.0) 38%, rgba(95,208,255,.55) 56%, rgba(57,184,255,.22) 66%, rgba(57,184,255,0) 71%); filter:blur(3px); }
   body[data-wait="dot"] .pulse { opacity:1; }
-  body[data-wait="dot"] .pulse i { animation: wave 2.4s cubic-bezier(.2,.6,.3,1) infinite; }
-  body[data-wait="dot"] .pulse i:nth-child(2) { animation-delay:.8s; }
-  body[data-wait="dot"] .pulse i:nth-child(3) { animation-delay:1.6s; }
-  @keyframes wave { 0% { transform:scale(1); opacity:.9; border-width:3px; } 100% { transform:scale(2.3); opacity:0; border-width:1px; } }
-  body[data-wait="dot"] .lines { opacity:1; }
-  body[data-wait="dot"] .lines path { animation-duration:2.2s; stroke-width:.9; }
-  body[data-wait="dot"] .lines path:nth-child(2) { animation-duration:3s; }
-  body[data-wait="dot"] .lines path:nth-child(3) { animation-duration:4s; }
+  body[data-wait="dot"] .pulse i { animation: swell 3.2s cubic-bezier(.25,.6,.35,1) infinite; }
+  body[data-wait="dot"] .pulse i:nth-child(2) { animation-delay:1.07s; }
+  body[data-wait="dot"] .pulse i:nth-child(3) { animation-delay:2.13s; }
+  @keyframes swell { 0% { transform:scale(.9); opacity:0; } 12% { opacity:1; } 100% { transform:scale(2.1); opacity:0; } }
+  .drops { position:absolute; left:50%; top:calc(var(--cy) - 26vw); width:0; height:0; opacity:0; transition:opacity .6s; }
+  .drops i { position:absolute; left:calc(var(--x) - 4.5vw); top:-4.5vw; width:9vw; height:9vw; border-radius:50%; opacity:0;
+    background: radial-gradient(circle at 32% 28%, #fff 0, rgba(255,255,255,0) 40%), linear-gradient(140deg,#c9f4ff,#19c3ff 60%,#1673ff); }
+  body[data-wait="dot"] .drops { opacity:1; }
+  body[data-wait="dot"] .drops i { animation: budUp 3.6s infinite; animation-delay:var(--d); }
+  @keyframes budUp {
+    0% { transform:translate(0,4vw) scale(.2); opacity:0; animation-timing-function:cubic-bezier(.45,0,.9,.5); }
+    8% { opacity:1; }
+    26% { transform:translate(0,-1vw) scale(.62,.95); animation-timing-function:cubic-bezier(.2,.9,.3,1); }
+    34% { transform:translate(0,-4.5vw) scale(.95,.8); animation-timing-function:ease-out; }
+    44% { transform:translate(0,-7vw) scale(.82,1.06); animation-timing-function:cubic-bezier(.4,0,.6,1); }
+    100% { transform:translate(var(--dx),-48vw) scale(.42); opacity:0; } }
   body[data-wait="dot"] .b1::after { animation-duration:2.5s, 1.6s; }
   body[data-wait="dot"] .b1::before { animation-duration:1.6s; }
   .trail { position:absolute; left:50%; bottom:16vh; width:5vw; margin-left:-2.5vw; height:0; border-radius:3vw; opacity:0;
@@ -104,11 +106,19 @@
   @keyframes twinkle { 0%, 100% { opacity:0; transform:scale(.2) rotate(0); } 50% { opacity:1; transform:scale(1) rotate(45deg); } }
   body[data-wait="scan"] .b1 { --grad: radial-gradient(60% 50% at 30% 25%, rgba(143,230,255,.6), rgba(143,230,255,0) 70%), linear-gradient(160deg,#1673ff 0%,#0b3fb0 55%,#0a2a66 100%); }
   /* 송출 대기: 도형이 여러 빛 조각으로 나뉘어 떠다님 (기울이면 따라 움직임) */
-  body[data-wait="float"] .b1 { transform:scale(.15); opacity:0; transition-duration:.5s; }
-  .bit { position:absolute; left:0; top:0; will-change:transform; opacity:0; transition:opacity .4s; filter:drop-shadow(0 10px 18px rgba(22,115,255,.28)); }
+  /* 원이 조각들을 밀어내며 줄어듦 (조각이 빠져나가는 만큼 작아짐) */
+  body[data-wait="float"] .b1 { transform:scale(.1); opacity:0;
+    transition-duration: var(--snapT), var(--snapT), var(--snapT), var(--snapT), var(--snapT), 1.9s, .5s, 1s;
+    transition-timing-function: var(--snap), var(--snap), var(--snap), var(--snap), var(--snap), cubic-bezier(.5,0,.35,1), ease, ease;
+    transition-delay: 0s, 0s, 0s, 0s, 0s, .35s, 1.75s, 0s; }
+  body[data-wait="float"] .b1::before { opacity:1 !important; transition-duration:.25s; } /* 조각을 내보내는 동안 원은 평면 파랑 그대로 */
+  body[data-wait="float"] .b1::after { opacity:0 !important; transition-duration:.25s; }
+  /* --raw 1 = 원과 같은 평면 파랑(명암 없음) → 0 = 각자의 그라데이션·그림자 */
+  .bit { position:absolute; left:0; top:0; will-change:transform; opacity:0; --raw:1; filter:drop-shadow(0 10px 18px rgba(22,115,255,calc(.28 * (1 - var(--raw))))); }
   .bit.on { opacity:1; }
   .bit > i { display:block; width:100%; height:100%;
-    background: radial-gradient(circle at 30% 26%, rgba(255,255,255,.95) 0, rgba(255,255,255,0) 32%), linear-gradient(140deg, var(--c1), var(--c2)); }
+    background: linear-gradient(rgba(22,115,255,var(--raw)), rgba(22,115,255,var(--raw))),
+      radial-gradient(circle at 30% 26%, rgba(255,255,255,.95) 0, rgba(255,255,255,0) 32%), linear-gradient(140deg, var(--c1), var(--c2)); }
   .bit.circle > i { border-radius:50%; }
   .bit.square > i { border-radius:24%; }
   .bit.capsule > i { border-radius:999px; height:52%; margin-top:24%; }
@@ -147,6 +157,31 @@
   body.hold #s-intro > :not(.hd):not(h1) { opacity:0; transform:translateY(18px); }
   body[data-scene="s-intro"].landing .b1 { transition: none; }
   body.landing .b1 { animation: land 1.1s cubic-bezier(.2,.9,.25,1.1) 1; }
+  /* 인트로: 작은 원은 반원 가장자리에서 액체처럼 부풀어 → 목이 늘어나 → 끊어져 나와 자리 잡음 (goo 필터) */
+  body[data-scene="s-intro"].warping .b2, body[data-scene="s-intro"].hold .b2, body[data-scene="s-intro"].budHide .b2 { opacity:0; }
+  .goo { position:absolute; left:0; top:0; width:100vw; height:80vw; opacity:0; overflow:visible; }
+  body.bud[data-scene="s-intro"] .goo { animation: gooLife 2.2s 1 both; }
+  @keyframes gooLife { 0%, 90% { opacity:1; } 100% { opacity:0; } }
+  .goo .gD { transform-box:fill-box; transform-origin:center; }
+  .goo .gS { transform-box:view-box; transform-origin:50px 0px; }
+  body.bud[data-scene="s-intro"] .gD { animation: gooDrop 1.5s 1 both; }
+  body.bud[data-scene="s-intro"] .gS { animation: gooPull 1.5s 1 both; }
+  @keyframes gooDrop {
+    0% { transform:translate(-5px,-17px) scale(.3); fill:#1673ff; animation-timing-function:cubic-bezier(.45,0,.8,.5); }
+    34% { transform:translate(-4px,-12px) rotate(-18deg) scale(.58,.68); fill:#1673ff; animation-timing-function:cubic-bezier(.4,0,.7,.6); }
+    55% { transform:translate(-2.4px,-6.8px) rotate(-18deg) scale(.7,.94); fill:#1a8cff; animation-timing-function:cubic-bezier(.3,.8,.4,1); }
+    68% { transform:translate(.3px,1px) rotate(-18deg) scale(1.12,.86); fill:#19c3ff; animation-timing-function:ease-in-out; }
+    80% { transform:translate(0,-.3px) rotate(-18deg) scale(.95,1.05); }
+    91% { transform:rotate(-18deg) scale(1.02,.985); }
+    100% { transform:none; fill:#19c3ff; } }
+  @keyframes gooPull { 0%, 40% { transform:none; } 56% { transform:scale(1,1.018); animation-timing-function:cubic-bezier(.2,.9,.3,1); }
+    64% { transform:scale(1,.988); } 78% { transform:scale(1,1.005); } 100% { transform:none; } }
+  .spl { position:absolute; left:83vw; top:45vw; width:0; height:0; }
+  .spl i { position:absolute; left:-.9vw; top:-.9vw; width:1.8vw; height:1.8vw; border-radius:50%; background:#5fd0ff; opacity:0; }
+  body.bud[data-scene="s-intro"] .spl i { animation: splash 1.5s 1 both; }
+  .spl i:nth-child(2) { width:1.2vw; height:1.2vw; } .spl i:nth-child(3) { width:1vw; height:1vw; background:#1673ff; }
+  @keyframes splash { 0%, 58% { transform:none; opacity:0; } 60% { opacity:1; transform:scale(1); }
+    100% { transform:translate(var(--tx),var(--ty)) scale(.2); opacity:0; animation-timing-function:cubic-bezier(.2,.8,.3,1); } }
   @keyframes land { from { transform:scale(1.25); filter:brightness(1.6); } to { transform:none; filter:none; } }
   #s-intro > :not(.hd) { transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
   body.hold #s-intro > :not(.hd):not(h1) { opacity:0; transform:translateY(18px); }
@@ -162,12 +197,19 @@
   /* 장면별 도형 — 상단 반원 → 가운데 네모 → 캡슐 → 원(빛 구슬) → 다시 떠오르는 해 */
   body[data-scene="s-intro"] .b1 { left:0; top:0; width:100vw; height:56vw; border-radius:0 0 50vw 50vw / 0 0 56vw 56vw; }
   body[data-scene="s-intro"] .b2 { left:78vw; top:50vw; }
-  body[data-scene="s-consent"] .b1 { left:calc(var(--px) + var(--pw) / 2 - 17vw); top:calc(var(--py) + var(--ph) / 2 - 17vw); width:34vw; height:34vw; border-radius:7vw; transform:rotate(-10deg); }
-  body[data-scene="s-consent"] .b2 { left:calc(var(--px) + var(--pw) / 2 + 12vw); top:calc(var(--py) + var(--ph) / 2 + 8vw); width:10vw; height:10vw; border-radius:5vw; }
-  body[data-scene="s-consent"].soft .b1 { left:var(--px); top:var(--py); width:var(--pw); height:var(--ph); border-radius:7vw; transform:none;
-    --grad: radial-gradient(70% 60% at 85% 100%, rgba(143,230,255,.55) 0%, rgba(143,230,255,0) 70%), linear-gradient(150deg, #39b8ff 0%, #1673ff 50%, #0b5bd6 100%); }
-  body[data-scene="s-consent"].soft .b2 { left:calc(var(--px) + var(--pw) - 7vw); top:calc(var(--py) - 4vw); width:9vw; height:9vw; }
-  body[data-scene="s-consent"].soft .b1, body[data-scene="s-msg"] .b1 { --br:1.012; }
+  /* 동의: 상단 반원이 그대로 흘러내려 패널이 됨 — 위치·높이·폭·모서리가 조금씩 어긋나게 움직여 끈적하게 이어짐 */
+  body[data-scene="s-consent"] .b1 { left:var(--px); top:var(--py); width:var(--pw); height:var(--ph); border-radius:7vw; transform:none;
+    --grad: radial-gradient(70% 60% at 85% 100%, rgba(143,230,255,.55) 0%, rgba(143,230,255,0) 70%), linear-gradient(150deg, #39b8ff 0%, #1673ff 50%, #0b5bd6 100%);
+    transition-duration: 1.1s, 1.15s, 1.2s, 1s, .95s, .6s, .6s, 1s;
+    transition-timing-function: cubic-bezier(.6,0,.25,1), cubic-bezier(.55,0,.25,1.08), cubic-bezier(.6,0,.2,1.06), cubic-bezier(.5,0,.3,1.1), cubic-bezier(.5,0,.3,1), ease, ease, ease;
+    transition-delay: .1s, 0s, .14s, .04s, .06s, 0s, 0s, 0s; }
+  body.morph[data-scene="s-consent"]:not(.landing) .b1 { animation: pour 1.3s 1; transform-origin:50% 0; }
+  @keyframes pour { 0% { scale:1; animation-timing-function:cubic-bezier(.4,0,.7,.5); } 34% { scale:.95 1.07; animation-timing-function:cubic-bezier(.3,.7,.4,1); }
+    66% { scale:1.025 .96; animation-timing-function:ease-in-out; } 84% { scale:.995 1.01; } 100% { scale:1; } }
+  body[data-scene="s-consent"] .b2 { left:calc(var(--px) + var(--pw) - 7vw); top:calc(var(--py) - 4vw); width:9vw; height:9vw; --antic:.32s; }
+  #s-consent .panelArea > * { opacity:0; transition:opacity .45s ease .75s; }
+  #s-consent.in .panelArea > * { opacity:1; }
+  body[data-scene="s-consent"] .b1, body[data-scene="s-msg"] .b1 { --br:1.012; }
   body[data-scene="s-intro"] .b1 { --br:1.02; }
   body[data-scene="s-msg"] .b1 { left:calc(var(--mx) - 8px); top:calc(var(--my) - 8px); width:calc(var(--mw) + 16px); height:calc(var(--mh) + 16px); border-radius:calc((var(--mh) + 16px) / 2); transform:none; }
   body[data-scene="s-msg"] .b2 { left:calc(var(--mx) + var(--mw) - 4vw); top:calc(var(--my) - 6vw); width:8vw; height:8vw; border-radius:1.5vw; transform:rotate(45deg); }
@@ -177,7 +219,6 @@
   body[data-scene="s-msg"] input[type=text] { caret-color:#fff; }
   body[data-scene="s-wait"] .b1 { left:22vw; top:calc(var(--cy) - 28vw); width:56vw; height:56vw; border-radius:28vw; }
   body[data-scene="s-wait"] .b2 { opacity:0; transform:scale(0); }
-  body[data-scene="s-wait"][data-wait="scan"] .ring, body[data-scene="s-wait"][data-wait="dot"] .ring { opacity:1; transform:scale(1); }
   body[data-wait="dot"] .b1 { transform:scale(1.06); }
   body[data-wait="drop"] .b1 { left:47vw; top:calc(100vh - 19vh); width:6vw; height:6vw; border-radius:3vw; transform:none;
     transition-duration:.55s; transition-timing-function:cubic-bezier(.55,0,.75,.1); }
@@ -230,12 +271,12 @@
   .term em { font-style:normal; font-size:11px; font-weight:700; color:var(--main1); background:#e6f1ff; border-radius:6px; padding:2px 6px; margin-right:6px; }
   .see { background:none; border:0; color:var(--muted); font-size:13px; text-decoration:underline; text-underline-offset:3px; padding:6px 2px; flex:none; }
   .agreeAll span, .term label, .term em, .see, .agreeAll { transition: color .5s .25s, background .5s .25s, box-shadow .5s .25s; }
-  body[data-scene="s-consent"].soft .agreeAll { background:rgba(255,255,255,.16); color:#fff; box-shadow:0 0 0 1px rgba(255,255,255,.35) inset; }
-  body[data-scene="s-consent"].soft .term { border-color:rgba(255,255,255,.22); }
-  body[data-scene="s-consent"].soft .term label { color:#fff; }
-  body[data-scene="s-consent"].soft .term em { background:rgba(255,255,255,.2); color:#fff; }
-  body[data-scene="s-consent"].soft .see { color:rgba(255,255,255,.85); }
-  body[data-scene="s-consent"].soft .agreeAll input, body[data-scene="s-consent"].soft .term input { accent-color:#fff; }
+  body[data-scene="s-consent"] .agreeAll { background:rgba(255,255,255,.16); color:#fff; box-shadow:0 0 0 1px rgba(255,255,255,.35) inset; }
+  body[data-scene="s-consent"] .term { border-color:rgba(255,255,255,.22); }
+  body[data-scene="s-consent"] .term label { color:#fff; }
+  body[data-scene="s-consent"] .term em { background:rgba(255,255,255,.2); color:#fff; }
+  body[data-scene="s-consent"] .see { color:rgba(255,255,255,.85); }
+  body[data-scene="s-consent"] .agreeAll input, body[data-scene="s-consent"] .term input { accent-color:#fff; }
   .panelArea { margin:14px -12px 0; padding:14px 12px 6px; }
   .panelArea .term { padding:13px 6px; }
   .panelArea .term label { font-size:14px; gap:10px; letter-spacing:-.01em; }
@@ -330,14 +371,12 @@
   <div class="tunnel"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div>
   <div class="pulse"><i></i><i></i><i></i></div>
   <div class="trail"></div>
-  <div class="ring"></div>
-  <svg class="lines" viewBox="0 0 100 100"><defs><linearGradient id="lg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#1673ff"/><stop offset=".5" stop-color="#19c3ff"/><stop offset="1" stop-color="#8fe6ff"/></linearGradient></defs>
-    <path d="M12,50 C12,22 38,8 58,14 S94,40 86,66 S54,96 32,86 S6,68 12,50" />
-    <path d="M20,30 C34,8 70,6 84,26 S92,72 70,84 S20,90 12,62 S10,40 20,30" />
-    <path d="M8,58 C14,82 44,96 66,90 S96,62 90,38 S62,4 40,10 S4,34 8,58" />
-  </svg>
+  <div class="drops"><i style="--x:-7vw;--dx:-10vw;--d:0s"></i><i style="--x:6vw;--dx:9vw;--d:.9s"></i><i style="--x:-1vw;--dx:3vw;--d:1.8s"></i><i style="--x:3vw;--dx:-4vw;--d:2.7s"></i></div>
+  <div class="spl"><i style="--tx:7vw;--ty:-3vw"></i><i style="--tx:-4vw;--ty:-5vw"></i><i style="--tx:3vw;--ty:6vw"></i></div>
   <div class="blob b1"></div>
   <div class="blob b2"></div>
+  <svg class="goo" viewBox="0 0 100 80"><defs><filter id="gooF" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/><feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/></filter></defs>
+    <g filter="url(#gooF)"><ellipse class="gS" cx="50" cy="0" rx="50" ry="56" fill="#1673ff"/><circle class="gD" cx="85" cy="57" r="7" fill="#19c3ff"/></g></svg>
   <div class="scan"></div><div class="scanLine"></div>
   <i class="spark" style="left:30vw;top:calc(var(--cy) - 16vw);animation-delay:.3s"></i><i class="spark" style="left:64vw;top:calc(var(--cy) - 4vw);animation-delay:1.1s"></i><i class="spark" style="left:44vw;top:calc(var(--cy) + 14vw);animation-delay:1.8s"></i>
   <div class="bits" id="bits"></div>
@@ -520,11 +559,11 @@ function measureTo(id, p) {
 function measurePanel() { measureTo('panelArea', 'p'); measureTo('msg', 'm'); }
 addEventListener('resize', measurePanel);
 const show = (id) => {
-  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('warping', 'warpOut', 'hold', 'landing'); }
+  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('warping', 'warpOut', 'hold', 'landing', 'bud', 'budHide'); }
   document.querySelectorAll('.screen').forEach(s => { const on = s.id === id; s.classList.toggle('on', on); s.classList.remove('in'); });
+  measurePanel(); // 장면을 바꾸기 전에 목적지 크기를 먼저 재야 도형이 순간이동하지 않고 이어서 움직임
   document.body.dataset.scene = id;
   const sc = $(id); if (sc) { void sc.offsetWidth; sc.classList.add('in'); }
-  measurePanel();
   sceneFx();
 };
 (() => { const r = document.querySelector('#fx .rise'); for (let k = 0; k < 16; k++) { const d = document.createElement('i'); const z = 4 + Math.random() * 10;
@@ -542,7 +581,11 @@ function land() {
   if (!b.classList.contains('warpOut')) b.classList.add('warpOut');
   b.classList.add('landing');
   opT3 = setTimeout(() => { b.classList.remove('warping', 'warpOut'); }, 900);
-  setTimeout(() => { b.classList.remove('hold', 'landing'); sc.classList.add('in'); softT = setTimeout(() => b.classList.add('soft'), 700); }, 350);
+  b.classList.add('budHide'); // 작은 원은 반원에서 떨어져 나오며 태어남
+  setTimeout(() => b.classList.add('bud'), 450);
+  setTimeout(() => b.classList.remove('budHide'), 450 + 1500);
+  setTimeout(() => b.classList.remove('bud'), 450 + 2300);
+  setTimeout(() => { b.classList.remove('hold', 'landing'); sc.classList.add('in'); softT = setTimeout(() => b.classList.add('soft'), 2250); }, 350);
 }
 $('warp').addEventListener('pointerdown', () => { if (document.body.classList.contains('warping') && !document.body.classList.contains('landing')) land(); });
 opening();
@@ -774,13 +817,17 @@ addEventListener('deviceorientation', (e) => {
   tilt.gy = Math.sin(Math.max(-60, Math.min(60, e.beta - tilt.base.b)) * rad);
   tilt.live = true;
 });
-function bitsStart() {
+let bitsT0 = 0;
+function bitsStart() { // 원 안에서 같은 평면 파랑으로 숨어 있다가 → 하나씩 밀려 나오고 → 벗어난 뒤에 명암이 생김
   if (bitsMode === 'float') return;
-  const W = innerWidth, cx = W / 2, cy = innerHeight * 0.42;
-  bodies.forEach((b, i) => { const ang = i / bodies.length * Math.PI * 2 + Math.random() * .4, sp = 500 + Math.random() * 300;
-    b.r = b.vw / 100 * W / 2; b.x = cx; b.y = cy; b.vx = Math.cos(ang) * sp; b.vy = Math.sin(ang) * sp; b.va = (Math.random() - .5) * 4; b.s = .2;
-    b.el.style.width = b.el.style.height = (b.r * 2) + 'px'; b.el.classList.add('on'); });
-  bitsMode = 'float'; tilt.base = null; lastT = performance.now(); cancelAnimationFrame(bitsRaf); bitsRaf = requestAnimationFrame(bitsStep);
+  const W = innerWidth, cx = W / 2, cy = innerHeight * 0.42, t0 = performance.now(), R0 = W * .28;
+  const order = bodies.map((_, i) => i).sort(() => Math.random() - .5);
+  bodies.forEach((b, i) => { const ang = i / bodies.length * Math.PI * 2 + Math.random() * .5, pre = R0 * (.12 + Math.random() * .2);
+    b.r = b.vw / 100 * W / 2; b.ang = ang; b.x = cx + Math.cos(ang) * pre; b.y = cy + Math.sin(ang) * pre;
+    b.vx = b.vy = 0; b.va = (Math.random() - .5) * 2.4; b.a = Math.random() * 6; b.s = .5; b.born = false; b.out = 0; b.raw = 1;
+    b.birth = t0 + 380 + order.indexOf(i) * 120 + Math.random() * 60;
+    b.el.style.width = b.el.style.height = (b.r * 2) + 'px'; b.el.style.setProperty('--raw', 1); b.el.classList.remove('on'); });
+  bitsT0 = t0; bitsMode = 'float'; tilt.base = null; lastT = t0; cancelAnimationFrame(bitsRaf); bitsRaf = requestAnimationFrame(bitsStep);
 }
 function bitsGather() { if (bitsMode === 'float') { bitsMode = 'gather'; bitsGatherT = performance.now(); } }
 let bitsGatherT = 0;
@@ -790,8 +837,18 @@ function bitsStep() {
   const W = innerWidth, H = innerHeight, cx = W / 2, cy = H * 0.42;
   if (bitsMode === 'float') {
     const G = 1600, drift = tilt.live ? 0 : 1;
+    const Rc = W * .28 * (1 - .9 * Math.min(1, Math.max(0, (t - bitsT0 - 350) / 1900)) ** 1.6); // 줄어드는 원 반지름
     for (const b of bodies) {
-      b.s = Math.max(.05, Math.min(1, b.s + (1 - b.s) * Math.min(1, dt * 6)));
+      if (!b.born) { // 원 속에서 꿈틀거리며 대기
+        if (t - bitsT0 > 280) b.el.classList.add('on'); // 원이 평면 파랑이 된 뒤에야 같은 색으로 숨어 있음
+        if (t < b.birth) { b.a += b.va * dt * .3; b.s = .5 + Math.sin((t - bitsT0) / 160 + b.r) * .03; continue; }
+        b.born = true; const sp = 300 + Math.random() * 140; b.vx = Math.cos(b.ang) * sp; b.vy = Math.sin(b.ang) * sp;
+      }
+      const d = Math.hypot(b.x - cx, b.y - cy);
+      if (!b.out && d - b.r * .35 > Rc) b.out = t;
+      const raw = t - bitsT0 > 3200 ? 0 : b.out ? Math.max(0, 1 - (t - b.out) / 900) : 1;
+      if (raw !== b.raw) { b.raw = raw; b.el.style.setProperty('--raw', raw.toFixed(3)); }
+      b.s = Math.max(.05, Math.min(1, b.s + (1 - b.s) * Math.min(1, dt * 3.2)));
       b.vx += (tilt.gx * G + drift * (Math.sin(t / 900 + b.r) * 60 + (cx - b.x) * .15)) * dt;
       b.vy += (tilt.gy * G + drift * (Math.cos(t / 1100 + b.r) * 60 + (cy - b.y) * .15)) * dt;
       b.vx *= .992; b.vy *= .992; b.x += b.vx * dt; b.y += b.vy * dt; b.a += (b.va + b.vx * .004) * dt; b.va *= .99;
@@ -799,6 +856,7 @@ function bitsStep() {
       if (b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy) * .6; } if (b.y > H - b.r) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * .6; }
     }
     for (let i = 0; i < bodies.length; i++) for (let j = i + 1; j < bodies.length; j++) {
+      if (!bodies[i].born || !bodies[j].born) continue;
       const p = bodies[i], q = bodies[j], dx = q.x - p.x, dy = q.y - p.y, d = Math.hypot(dx, dy) || 1, m = (p.r + q.r) * .92;
       if (d < m) { const nx = dx / d, ny = dy / d, o = (m - d) / 2; p.x -= nx * o; p.y -= ny * o; q.x += nx * o; q.y += ny * o;
         const rv = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny; if (rv < 0) { const k = -rv * .8; p.vx -= nx * k; p.vy -= ny * k; q.vx += nx * k; q.vy += ny * k; p.va -= k * .01; q.va += k * .01; } }
@@ -808,7 +866,9 @@ function bitsStep() {
     for (const b of bodies) { b.x += (cx - b.x) * Math.min(1, dt * 8); b.y += (cy - b.y) * Math.min(1, dt * 8); b.s = Math.max(.05, 1 - k); }
     if (k >= 1) { bodies.forEach(b => b.el.classList.remove('on')); bitsMode = 'off'; return; }
   } else return;
-  for (const b of bodies) b.el.style.transform = `translate(${b.x - b.r}px, ${b.y - b.r}px) rotate(${b.a}rad) scale(${b.s})`;
+  for (const b of bodies) { // 빠를수록 진행 방향으로 늘어남 (말랑한 조각)
+    const v = Math.hypot(b.vx, b.vy), k = bitsMode === 'float' ? Math.min(.22, v / 2600) : 0, dir = Math.atan2(b.vy, b.vx);
+    b.el.style.transform = `translate(${b.x - b.r}px, ${b.y - b.r}px) rotate(${dir}rad) scale(${b.s * (1 + k)}, ${b.s * (1 - k * .7)}) rotate(${b.a - dir}rad)`; }
   bitsRaf = requestAnimationFrame(bitsStep);
 }
 $('s-wait').addEventListener('pointerdown', (e) => { // 탭하면 그 자리에서 조각들이 튕겨나감
