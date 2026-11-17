@@ -590,7 +590,17 @@ setInterval(() => {
     panels.map(p => `${p.side}: ${p.item ? '#' + p.item.id : '-'}`).join('  ') + (lastErr ? `\nerr: ${lastErr}` : '');
 }, 500);
 
-function applyReview(c) { const was = reviewOff; reviewOff = (c && c.review_mode) === 'off'; if (reviewOff && !was) poll(); }
+function applyReview(c) { const was = reviewOff; reviewOff = (c && c.review_mode) === 'off'; if (reviewOff && !was) poll(); checkReload(c); }
+// 검수 콘솔의 「송출 화면 새로고침」: wall_reload 값이 바뀌면 재생 중이던 항목을 마무리(파기)하고 새로고침
+let reloadMark, reloading = false;
+async function checkReload(c) {
+  const m = (c && c.wall_reload) || '';
+  if (reloadMark === undefined) { reloadMark = m; return; }
+  if (!m || m === reloadMark || reloading) return;
+  reloading = true;
+  await Promise.all(panels.filter(p => p.item).map(p => Relay.setStatus(p.item.id, 'played', p.side).catch(() => {})));
+  location.reload();
+}
 Relay.getConfig && Relay.getConfig().then(applyReview).catch(() => {});
 Relay.subscribeConfig && Relay.subscribeConfig(applyReview);
 setInterval(() => Relay.getConfig && Relay.getConfig().then(applyReview).catch(() => {}), 15000);

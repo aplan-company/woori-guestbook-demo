@@ -39,6 +39,10 @@
   .mswitch.on { background:#fff; color:var(--blue); box-shadow:0 8px 24px rgba(10,26,51,.25); }
   .mswitch.on .tg { background:linear-gradient(135deg,#39b8ff,#1673ff); }
   .mswitch.on .tg::after { transform:translateX(18px); }
+  .mswitch.rbtn { padding:8px 14px; }
+  .mswitch.rbtn .ic { font-size:16px; line-height:1; display:inline-block; transition:transform .6s var(--spring); }
+  .mswitch.rbtn.armed { background:#fff; color:var(--blue); }
+  .mswitch.rbtn.spin .ic { transform:rotate(360deg); }
   .mswitch.warn { background:#ff4d5e; color:#fff; box-shadow:0 8px 24px rgba(255,77,94,.35); }
   .mswitch.warn .tg { background:rgba(255,255,255,.35); }
   .offbox { grid-column:1/-1; display:flex; flex-direction:column; align-items:center; gap:14px; padding:100px 0; color:var(--muted); font-size:16px; text-align:center; }
@@ -72,6 +76,7 @@
   <h1>검수 콘솔</h1>
   <span class="stat">검수 대기<b id="n-pending">0</b></span>
   <span class="stat">송출 대기<b id="n-approved">0</b></span>
+  <button class="mswitch rbtn" id="wreload" title="외벽 송출 화면(송출 PC)을 원격으로 새로고침합니다. 실수 방지를 위해 두 번 눌러야 실행돼요"><span>송출 화면 새로고침</span><span class="ic">⟳</span></button>
   <button class="mswitch" id="rswitch" title="OFF로 두면 검수 없이 접수 즉시 외벽 송출 대기열로 넘어갑니다"><span id="rlabel">검수 ON</span><span class="tg"></span></button>
   <button class="mswitch" id="mswitch" title="네트워크가 혼잡할 때 모든 폰을 사진 모드로만 촬영하게 합니다"><span id="mlabel">사진 전용 모드 OFF</span><span class="tg"></span></button>
   <span class="mode" id="mode"></span>
@@ -383,6 +388,23 @@ function confirmOff() {
   confirmOff.armed = true; toast('한 번 더 누르면 검수가 꺼지고 바로 송출돼요');
   setTimeout(() => confirmOff.armed = false, 2000); return false;
 }
+
+// ---- 송출 화면 원격 새로고침 (2초 안에 두 번 눌러야 실행)
+(() => {
+  const b = document.getElementById('wreload'); let armT = 0;
+  b.onclick = async () => {
+    if (!b.classList.contains('armed')) {
+      b.classList.add('armed'); toast('한 번 더 누르면 외벽 송출 화면을 새로고침해요 (재생 중인 영상은 끝난 것으로 처리)');
+      clearTimeout(armT); armT = setTimeout(() => b.classList.remove('armed'), 2000); return;
+    }
+    b.classList.remove('armed'); clearTimeout(armT);
+    try {
+      await Relay.setConfig('wall_reload', String(Date.now()));
+      b.classList.add('spin'); setTimeout(() => b.classList.remove('spin'), 700);
+      toast('외벽 송출 화면을 새로고침했어요');
+    } catch (e) { toast('새로고침 실패: ' + e.message + (STAFF_KEY ? '' : ' (주소에 ?key= 필요)')); }
+  };
+})();
 
 // ---- 사진 전용 모드 (모든 폰 접속에 적용)
 let capMode = 'both';
