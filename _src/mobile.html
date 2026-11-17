@@ -86,8 +86,12 @@
   .tunnel i:nth-child(6n+4) { background:#1360e8; } .tunnel i:nth-child(6n+5) { background:#0b3fb0; } .tunnel i:nth-child(6n) { background:#39b8ff; }
   body[data-wait="send"] .tunnel { opacity:1; transform:none; }
   body[data-wait="send"] .tunnel i { animation: recede 4.2s linear infinite; animation-delay:calc(var(--k) * -0.7s); }
+  body[data-wait="send"]:not(.landing) .b1 { animation: corePop .7s 1 both; }
+  @keyframes corePop { 0% { scale:0; animation-timing-function:cubic-bezier(.3,1.5,.5,1); } 60% { scale:1.12; } 80% { scale:.96; } 100% { scale:1; } }
   @keyframes recede { 0% { transform:scale(1.35); opacity:0; z-index:0; } 10% { opacity:1; } 100% { transform:scale(.16); opacity:1; z-index:12; } }
-  body[data-scene="s-wait"][data-wait="send"] .b1 { left:39vw; top:calc((var(--top) + var(--cy) + 28vw) / 2 - 14vw); width:22vw; height:28vw; border-radius:6vw; transform:none;
+  /* 터널의 가장 안쪽: 가장 작고, 정확히 터널 중심에 고정 (이동 없이 제자리에서 톡 생김) */
+  body[data-scene="s-wait"][data-wait="send"] .b1 { left:45vw; top:calc((var(--top) + var(--cy) + 28vw) / 2 - 6.25vw); width:10vw; height:12.5vw; border-radius:3vw; transform:none;
+    transition-duration:0s, 0s, 0s, 0s, 0s, 0s, .3s, 0s; transition-delay:0s, 0s, 0s, 0s, 0s, 0s, 0s, 0s;
     --flat:#0a1f4d; --grad: linear-gradient(160deg,#10306e,#071634); z-index:20; }
   /* 검수 중: 반짝이며 훑고 지나가는 스캔 */
   .scan { position:absolute; left:22vw; top:calc(var(--cy) - 28vw); width:56vw; height:56vw; border-radius:50%; overflow:hidden; opacity:0; transition:opacity .6s; z-index:21; }
@@ -156,7 +160,11 @@
   .wskip { position:absolute; left:0; right:0; bottom:calc(28px + env(safe-area-inset-bottom)); text-align:center; font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.2em; color:rgba(255,255,255,.55); }
   body.hold #s-intro > :not(.hd):not(h1) { opacity:0; transform:translateY(18px); }
   body[data-scene="s-intro"].landing .b1 { transition: none; }
-  body.landing .b1 { animation: land 1.1s cubic-bezier(.2,.9,.25,1.1) 1; }
+  body.popIn[data-scene="s-intro"] .b1 { animation: popIn .85s 1 both; transform-origin:50% 0; }
+  body.warping:not(.popIn) .b1, body.budHide[data-scene="s-intro"]:not(.popIn):not(.bud) .b1 { opacity:0; transition:none; } /* 오프닝 동안 숨겨 두었다가 0에서 팝 */
+  @keyframes popIn { 0% { transform:scale(0); opacity:1; animation-timing-function:cubic-bezier(.25,.9,.35,1); }
+    52% { transform:scale(1.07); animation-timing-function:cubic-bezier(.5,0,.5,1); } 74% { transform:scale(.975); animation-timing-function:ease-in-out; }
+    88% { transform:scale(1.01); } 100% { transform:none; opacity:1; } }
   /* 인트로: 작은 원은 반원 가장자리에서 액체처럼 부풀어 → 목이 늘어나 → 끊어져 나와 자리 잡음 (goo 필터) */
   body[data-scene="s-intro"].warping .b2, body[data-scene="s-intro"].hold .b2, body[data-scene="s-intro"].budHide .b2 { opacity:0; }
   .goo { position:absolute; left:0; top:0; width:100vw; height:80vw; opacity:0; overflow:visible; }
@@ -200,14 +208,20 @@
   /* 동의: 상단 반원이 그대로 흘러내려 패널이 됨 — 위치·높이·폭·모서리가 조금씩 어긋나게 움직여 끈적하게 이어짐 */
   body[data-scene="s-consent"] .b1 { left:var(--px); top:var(--py); width:var(--pw); height:var(--ph); border-radius:7vw; transform:none;
     --grad: radial-gradient(70% 60% at 85% 100%, rgba(143,230,255,.55) 0%, rgba(143,230,255,0) 70%), linear-gradient(150deg, #39b8ff 0%, #1673ff 50%, #0b5bd6 100%);
-    transition-duration: 1.1s, 1.15s, 1.2s, 1s, .95s, .6s, .6s, 1s;
-    transition-timing-function: cubic-bezier(.6,0,.25,1), cubic-bezier(.55,0,.25,1.08), cubic-bezier(.6,0,.2,1.06), cubic-bezier(.5,0,.3,1.1), cubic-bezier(.5,0,.3,1), ease, ease, ease;
-    transition-delay: .1s, 0s, .14s, .04s, .06s, 0s, 0s, 0s; }
+    transition-duration: .9s, .85s, .95s, .9s, .75s, .6s, .6s, 1s;
+    transition-timing-function: cubic-bezier(.5,0,.25,1.06), cubic-bezier(.5,0,.25,1.08), cubic-bezier(.5,0,.2,1.08), cubic-bezier(.5,0,.25,1.1), cubic-bezier(.5,0,.3,1), ease, ease, ease;
+    transition-delay: .03s, 0s, .06s, .02s, 0s, 0s, 0s, 0s; }
   body.morph[data-scene="s-consent"]:not(.landing) .b1 { animation: pour 1.3s 1; transform-origin:50% 0; }
   @keyframes pour { 0% { scale:1; animation-timing-function:cubic-bezier(.4,0,.7,.5); } 34% { scale:.95 1.07; animation-timing-function:cubic-bezier(.3,.7,.4,1); }
     66% { scale:1.025 .96; animation-timing-function:ease-in-out; } 84% { scale:.995 1.01; } 100% { scale:1; } }
   body[data-scene="s-consent"] .b2 { left:calc(var(--px) + var(--pw) - 7vw); top:calc(var(--py) - 4vw); width:9vw; height:9vw; --antic:.32s; }
-  #s-consent .panelArea > * { opacity:0; transition:opacity .45s ease .75s; }
+  #s-consent .panelArea > * { opacity:0; transition:opacity .45s ease 1.2s; }
+  /* 장면 사이: 지금 도형이 제자리에서 삭~ 작은 구슬로 줄었다가 → 다음 장면 모양으로 펼쳐짐 */
+  body.pinch[data-scene] .b1 { left:calc(var(--qx) - 7vw); top:calc(var(--qy) - 7vw); width:14vw; height:14vw; border-radius:7vw; transform:none; animation:none;
+    transition-duration:.44s, .44s, .44s, .44s, .44s, .44s, .3s, .44s; transition-delay:0s, 0s, 0s, 0s, 0s, 0s, 0s, 0s;
+    transition-timing-function: cubic-bezier(.6,0,.35,1), cubic-bezier(.6,0,.35,1), cubic-bezier(.6,0,.35,1), cubic-bezier(.6,0,.35,1), cubic-bezier(.6,0,.35,1), ease, ease, ease; }
+  body.pinch[data-scene] .b2 { left:calc(var(--qx) - 3vw); top:calc(var(--qy) - 3vw); width:6vw; height:6vw; border-radius:3vw; transform:none; opacity:0; animation:none;
+    transition-duration:.4s, .4s, .4s, .4s, .4s, .4s, .35s, .4s; transition-delay:0s, 0s, 0s, 0s, 0s, 0s, 0s, 0s; }
   #s-consent.in .panelArea > * { opacity:1; }
   body[data-scene="s-consent"] .b1, body[data-scene="s-msg"] .b1 { --br:1.012; }
   body[data-scene="s-intro"] .b1 { --br:1.02; }
@@ -288,6 +302,17 @@
   .sheetHd { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; color:var(--muted); font-size:13px; }
   .sheetHd button { background:none; border:0; color:var(--ink); font-size:18px; padding:4px 8px; }
   .sheetBody { overflow:auto; margin-bottom:14px; }
+  /* 송출 중: 합성 영상 저장 여부 묻기 (화면을 가리지 않는 하단 카드) */
+  .sheetWrap.soft { background:transparent; pointer-events:none; }
+  .sheetWrap.soft .sheet { pointer-events:auto; box-shadow:0 -12px 40px rgba(11,31,58,.14); }
+  .keep { display:flex; gap:14px; align-items:center; margin:2px 0 14px; }
+  .keep canvas { width:62px; height:110px; border-radius:12px; flex:none; background:#0b3fb0; box-shadow:0 6px 16px rgba(22,115,255,.25); }
+  .keep b { display:block; font-family:"Wooridaum",sans-serif; font-size:19px; color:var(--ink); margin-bottom:4px; }
+  .keep p { font-size:13.5px; margin:0; }
+  .keepBar { height:4px; border-radius:2px; background:#e3ecf7; overflow:hidden; margin:-4px 0 12px; display:none; }
+  .keepBar i { display:block; height:100%; width:0; background:linear-gradient(90deg,#39b8ff,#1673ff); transition:width .2s linear; }
+  .keepRow { display:flex; gap:10px; } .keepRow .btn { padding:15px; font-size:16px; }
+  .keepRow .btn.line { flex:0 0 34%; }
   .sheetBody h3 { font-family:"Wooridaum",sans-serif; font-size:19px; margin:4px 0 12px; }
   .sheetBody table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
   .sheetBody th { width:76px; text-align:left; vertical-align:top; color:var(--muted); font-weight:600; padding:9px 8px 9px 0; border-top:1px solid var(--line); }
@@ -506,10 +531,17 @@
   </div>
   <div class="grow"></div>
   <button class="btn" id="b-retry" style="display:none">다시 보내기</button>
+  <button class="btn line" id="b-keepAgain" style="display:none;margin-top:10px">내 새해 인사 영상 저장하기</button>
   <button class="btn line" id="b-again" style="display:none;margin-top:10px">새로 참여하기</button>
   <div class="foot"><img src="assets/ci_blue.png" alt="우리금융그룹"><i class="sep"></i><img class="sac" src="assets/sac_color.png" alt="예술의전당"></div>
 </section>
 
+<div class="sheetWrap soft" id="keepAsk"><div class="sheet">
+  <div class="keep"><canvas id="keepPrev" width="124" height="220"></canvas>
+    <div><b>내 새해 인사, 간직할까요?</b><p id="keepDesc">외벽에 나온 모습 그대로 문구와 로고를 담은 영상으로 만들어 드려요. 내 폰에만 저장돼요.</p></div></div>
+  <div class="keepBar" id="keepBar"><i></i></div>
+  <div class="keepRow"><button class="btn line" id="b-keepNo">괜찮아요</button><button class="btn" id="b-keepYes">영상 저장하기</button></div>
+</div></div>
 <div class="mode" id="mode"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -558,12 +590,21 @@ function measureTo(id, p) {
 }
 function measurePanel() { measureTo('panelArea', 'p'); measureTo('msg', 'm'); }
 addEventListener('resize', measurePanel);
+let pinchT;
+const PINCH = ['s-consent', 's-msg'];
 const show = (id) => {
-  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('warping', 'warpOut', 'hold', 'landing', 'bud', 'budHide'); }
+  const from = document.body.dataset.scene, b1 = document.querySelector('#fx .b1');
+  const pinch = PINCH.includes(id) && from !== id && (from === 's-intro' || PINCH.includes(from));
+  if (pinch) { const r = b1.getBoundingClientRect(), st = document.body.style;
+    st.setProperty('--qx', (r.left + r.width / 2) + 'px'); st.setProperty('--qy', (r.top + r.height / 2) + 'px'); }
+  if (id !== 's-intro') { clearTimeout(opT1); clearTimeout(opT2); document.body.classList.remove('warping', 'warpOut', 'hold', 'landing', 'bud', 'budHide', 'popIn'); }
   document.querySelectorAll('.screen').forEach(s => { const on = s.id === id; s.classList.toggle('on', on); s.classList.remove('in'); });
   measurePanel(); // 장면을 바꾸기 전에 목적지 크기를 먼저 재야 도형이 순간이동하지 않고 이어서 움직임
   document.body.dataset.scene = id;
   const sc = $(id); if (sc) { void sc.offsetWidth; sc.classList.add('in'); }
+  clearTimeout(pinchT); document.body.classList.remove('pinch');
+  if (pinch) { const b = document.body; b.classList.remove('morph', 'soft'); clearTimeout(softT); b.classList.add('pinch');
+    pinchT = setTimeout(() => { b.classList.remove('pinch'); sceneFx(); }, 440); return; }
   sceneFx();
 };
 (() => { const r = document.querySelector('#fx .rise'); for (let k = 0; k < 16; k++) { const d = document.createElement('i'); const z = 4 + Math.random() * 10;
@@ -581,11 +622,14 @@ function land() {
   if (!b.classList.contains('warpOut')) b.classList.add('warpOut');
   b.classList.add('landing');
   opT3 = setTimeout(() => { b.classList.remove('warping', 'warpOut'); }, 900);
-  b.classList.add('budHide'); // 작은 원은 반원에서 떨어져 나오며 태어남
-  setTimeout(() => b.classList.add('bud'), 450);
-  setTimeout(() => b.classList.remove('budHide'), 450 + 1500);
-  setTimeout(() => b.classList.remove('bud'), 450 + 2300);
-  setTimeout(() => { b.classList.remove('hold', 'landing'); sc.classList.add('in'); softT = setTimeout(() => b.classList.add('soft'), 2250); }, 350);
+  b.classList.add('budHide'); // 섬광이 걷히면 큰 반원이 0에서 팝 → 작은 원은 반원에서 떨어져 나오며 태어남
+  const P = 480;
+  setTimeout(() => b.classList.add('popIn'), P);
+  setTimeout(() => b.classList.remove('popIn'), P + 960);
+  setTimeout(() => b.classList.add('bud'), P + 820);
+  setTimeout(() => b.classList.remove('budHide'), P + 820 + 1500);
+  setTimeout(() => b.classList.remove('bud'), P + 820 + 2300);
+  setTimeout(() => { b.classList.remove('hold', 'landing'); sc.classList.add('in'); softT = setTimeout(() => b.classList.add('soft'), P + 2650); }, 350);
 }
 $('warp').addEventListener('pointerdown', () => { if (document.body.classList.contains('warping') && !document.body.classList.contains('landing')) land(); });
 opening();
@@ -777,6 +821,7 @@ function done(title, desc, icon = '') {
   $('w-err').textContent = '';
   setWait(icon, title, desc);
   $('b-again').style.display = 'block';
+  $('b-keepAgain').style.display = icon === 'heart' && recBlob && !keep.done && !$('keepAsk').classList.contains('on') ? 'block' : 'none';
 }
 function setWait(icon, state, desc) {
   const w = icon === 'heart' ? 'done' : (icon || 'none');
@@ -790,6 +835,7 @@ function setWait(icon, state, desc) {
     return;
   }
   document.body.dataset.wait = w;
+  if (w === 'dot' && changed) setTimeout(() => { if (document.body.dataset.wait === 'dot') keepAsk(); }, 2200);
   if (w === 'float') bitsStart(); else bitsGather();
   setWaitText(state, desc);
   if (changed && document.body.dataset.scene === 's-wait') sceneFx();
@@ -875,6 +921,97 @@ $('s-wait').addEventListener('pointerdown', (e) => { // 탭하면 그 자리에�
   if (bitsMode !== 'float' || e.target.closest('button')) return;
   for (const b of bodies) { const dx = b.x - e.clientX, dy = b.y - e.clientY, d = Math.hypot(dx, dy) || 1, f = Math.max(0, 900 - d * 2); b.vx += dx / d * f; b.vy += dy / d * f; b.va += (Math.random() - .5) * 6; }
 });
+// ---- 송출 중/완료: 외벽 송출 모습 그대로 합성한 영상(또는 사진)을 내 폰에 저장
+const keep = { asked: false, busy: false, done: false, blob: null, name: '' };
+const loadImg = (src) => new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+function keepAsk() {
+  if (keep.asked || !recBlob) return; keep.asked = true;
+  const photo = recMime.startsWith('image');
+  $('keepDesc').textContent = `외벽에 나온 모습 그대로 문구와 로고를 담은 ${photo ? '사진' : '영상'}으로 만들어 드려요. 내 폰에만 저장돼요.`;
+  $('b-keepYes').textContent = photo ? '사진 저장하기' : '영상 저장하기';
+  $('keepAsk').classList.add('on');
+  keepDraw(null, 0).then(() => {}); // 미리보기 한 장
+}
+$('b-keepNo').onclick = () => { $('keepAsk').classList.remove('on'); if (document.body.dataset.wait === 'done' && !keep.done) $('b-keepAgain').style.display = 'block'; };
+$('b-keepAgain').onclick = () => { $('b-keepAgain').style.display = 'none'; $('keepAsk').classList.add('on'); };
+$('b-keepYes').onclick = async () => {
+  if (keep.busy) return;
+  if (keep.blob) return keepSave(); // 이미 만들어졌으면 바로 저장(공유) — 탭 제스처 안에서 실행
+  keep.busy = true; const btn = $('b-keepYes'); btn.disabled = true; btn.textContent = '만드는 중…'; $('keepBar').style.display = 'block';
+  try { keep.blob = await keepMake(p => { $('keepBar').firstElementChild.style.width = Math.round(p * 100) + '%'; btn.textContent = `만드는 중… ${Math.round(p * 100)}%`; }); }
+  catch (e) { keep.blob = recBlob; }
+  const ext = keep.blob.type.includes('jpeg') ? 'jpg' : keep.blob.type.includes('mp4') ? 'mp4' : 'webm';
+  keep.name = `우리새해방명록_2027.${ext}`;
+  keep.busy = false; btn.disabled = false; btn.textContent = ext === 'jpg' ? '사진 받기' : '영상 받기'; $('keepBar').firstElementChild.style.width = '100%';
+};
+async function keepSave() {
+  const file = new File([keep.blob], keep.name, { type: keep.blob.type });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '2027 새해, 우리는 해' }); keepFinish(); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(keep.blob); a.download = keep.name; document.body.append(a); a.click(); a.remove();
+  keepFinish();
+}
+function keepFinish() { keep.done = true; $('b-keepAgain').style.display = 'none'; $('b-keepYes').textContent = '저장했어요'; setTimeout(() => $('keepAsk').classList.remove('on'), 900); }
+let keepAssets;
+async function keepAssetsLoad() {
+  if (!keepAssets) keepAssets = Promise.all([loadImg('assets/ci_white.png'), loadImg('assets/sac_white.png'), document.fonts ? document.fonts.load('700 40px Wooridaum').catch(() => {}) : 0]);
+  return keepAssets;
+}
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function keepFrame(g, W, H, src, t, A) { // 외벽 패널과 같은 구성: 파랑 테두리 · 셀피 · 아래 남색 그라데이션 · 한마디 · 슬로건 · 로고
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#39b8ff'); bg.addColorStop(.45, '#1673ff'); bg.addColorStop(1, '#0b3fb0');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const m = W * .034, fx = m, fy = m, fw = W - m * 2, fh = H - m * 2;
+  g.save(); rr(g, fx, fy, fw, fh, W * .065); g.clip(); g.fillStyle = '#0a1a33'; g.fillRect(fx, fy, fw, fh);
+  if (src) { const sw = src.videoWidth || src.naturalWidth || src.width, sh = src.videoHeight || src.naturalHeight || src.height, k = Math.max(fw / sw, fh / sh);
+    g.save(); g.translate(fx + fw / 2, fy + fh / 2); g.scale(-1, 1); g.drawImage(src, -sw * k / 2, -sh * k / 2, sw * k, sh * k); g.restore(); }
+  const sh2 = g.createLinearGradient(0, fy + fh * .54, 0, fy + fh); sh2.addColorStop(0, 'rgba(6,20,48,0)'); sh2.addColorStop(.4, 'rgba(6,20,48,.5)'); sh2.addColorStop(.7, 'rgba(6,20,48,.9)'); sh2.addColorStop(1, '#061430');
+  g.fillStyle = sh2; g.fillRect(fx, fy + fh * .54, fw, fh * .46);
+  if (t > .15 && t < 1.3) { const p = (t - .15) / 1.15, x = fx - fw * .6 + p * fw * 2.2; // 빛이 한 번 훑고 지나감
+    const sw = g.createLinearGradient(x - fw * .25, 0, x + fw * .25, 0); sw.addColorStop(0, 'rgba(143,230,255,0)'); sw.addColorStop(.5, 'rgba(220,248,255,.32)'); sw.addColorStop(1, 'rgba(143,230,255,0)');
+    g.fillStyle = sw; g.fillRect(fx, fy, fw, fh); }
+  g.restore();
+  const u = W / 720, a = Math.min(1, Math.max(0, (t - .2) / .6));
+  g.save(); g.globalAlpha = a; g.textAlign = 'center'; g.fillStyle = '#fff';
+  g.font = `700 ${Math.round(24 * u)}px Wooridaum, sans-serif`; g.globalAlpha = a * .85; g.fillText('2027 새해, 우리는 해', W / 2, H * .725);
+  g.globalAlpha = a; g.font = `700 ${Math.round(50 * u)}px Wooridaum, sans-serif`; g.shadowColor = 'rgba(57,184,255,.9)'; g.shadowBlur = 26 * u;
+  const words = (message || '').split(' '), lines = []; let ln = '';
+  for (const w of words) { const tt = ln ? ln + ' ' + w : w; if (g.measureText(tt).width > fw * .82 && ln) { lines.push(ln); ln = w; } else ln = tt; } if (ln) lines.push(ln);
+  lines.slice(0, 3).forEach((l, i) => g.fillText(l, W / 2, H * .79 + i * 62 * u));
+  g.shadowBlur = 0; g.restore();
+  const [ci, sac] = A || []; const lh = 34 * u, y = H - m - 70 * u;
+  if (ci && sac) { const cw = ci.width * lh / ci.height, sw = sac.width * lh * 1.1 / sac.height, gap = 26 * u, tot = cw + gap * 2 + sw, x0 = (W - tot) / 2;
+    g.globalAlpha = .95; g.drawImage(ci, x0, y, cw, lh); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(x0 + cw + gap, y + 4 * u, 1.5 * u, lh - 8 * u);
+    g.drawImage(sac, x0 + cw + gap * 2, y - lh * .05, sw, lh * 1.1); g.globalAlpha = 1; }
+}
+async function keepSource() {
+  if (recMime.startsWith('image')) { const i = await loadImg(URL.createObjectURL(recBlob)); return { img: i }; }
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.src = URL.createObjectURL(recBlob);
+  await new Promise(r => { v.onloadeddata = r; v.onerror = r; setTimeout(r, 3000); });
+  return { video: v };
+}
+async function keepDraw(_, t) { // 미리보기 썸네일
+  const A = await keepAssetsLoad(), c = $('keepPrev'), g = c.getContext('2d'); const S = await keepSource();
+  if (S.video) await new Promise(r => { S.video.onseeked = r; S.video.currentTime = 1.2; setTimeout(r, 1500); });
+  keepFrame(g, c.width, c.height, S.img || S.video, 1.5, A);
+  if (S.video) URL.revokeObjectURL(S.video.src);
+}
+async function keepMake(prog) {
+  const A = await keepAssetsLoad(), W = 720, H = 1280, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const S = await keepSource();
+  if (S.img) { keepFrame(g, W, H, S.img, 1.5, A); prog(1); return await new Promise(r => c.toBlob(r, 'image/jpeg', .9)); }
+  const v = S.video, mime = pickMime();
+  const rec = new MediaRecorder(c.captureStream(30), mime ? { mimeType: mime, videoBitsPerSecond: 3000000 } : { videoBitsPerSecond: 3000000 });
+  const parts = []; rec.ondataavailable = e => e.data.size && parts.push(e.data);
+  const stopped = new Promise(r => rec.onstop = r);
+  keepFrame(g, W, H, v, 0, A); rec.start(250); v.currentTime = 0; await v.play().catch(() => {});
+  const t0 = performance.now(), LEN = (isFinite(v.duration) && v.duration > 0 ? v.duration : REC_SEC) + .4;
+  await new Promise(done => { const step = () => { const t = (performance.now() - t0) / 1000;
+    keepFrame(g, W, H, v, t, A); prog(Math.min(.99, t / LEN));
+    if (t >= LEN || (v.ended && t > 1)) return done(); requestAnimationFrame(step); }; requestAnimationFrame(step); });
+  rec.stop(); await stopped; v.pause(); URL.revokeObjectURL(v.src);
+  return new Blob(parts, { type: (rec.mimeType || mime || 'video/webm').split(';')[0] });
+}
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
