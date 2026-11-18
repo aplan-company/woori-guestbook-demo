@@ -46,11 +46,18 @@
   .panel[data-form="square"] .shape { left:330px; top:200px; width:420px; height:420px; border-radius:96px; transform:rotate(-10deg); }
   .panel[data-form="capsule"] .shape { left:120px; top:320px; width:840px; height:260px; border-radius:130px; transform:none; }
   .panel[data-form="circle"] .shape { left:300px; top:170px; width:480px; height:480px; border-radius:240px; transform:none; }
+  .panel[data-form="full"] .shape { left:0; top:0; width:1080px; height:1920px; border-radius:0; transform:none; }
+  .panel[data-form="frame"] .shape { left:120px; top:200px; width:840px; height:1320px; border-radius:84px; transform:none; }
+  .panel[data-form="pill"] .shape { left:330px; top:170px; width:420px; height:220px; border-radius:110px; transform:rotate(-6deg); }
+  .panel[data-form="capsule"]:has(.sc-how.on) .shape { top:150px; height:230px; }
   .dot2 { position:absolute; z-index:2; width:90px; height:90px; border-radius:45px; background:linear-gradient(135deg,#c9f4ff,#19c3ff); left:840px; top:560px;
     transition: left 1.4s var(--spring), top 1.4s var(--spring), border-radius 1.4s var(--spring), transform 1.4s var(--spring), opacity .5s; }
   .panel[data-form="square"] .dot2 { left:740px; top:560px; }
   .panel[data-form="capsule"] .dot2 { left:900px; top:270px; border-radius:16px; transform:rotate(45deg); width:70px; height:70px; }
   .panel[data-form="circle"] .dot2 { left:780px; top:140px; }
+  .panel[data-form="full"] .dot2 { left:900px; top:330px; width:110px; height:110px; border-radius:55px; }
+  .panel[data-form="frame"] .dot2 { left:900px; top:160px; }
+  .panel[data-form="pill"] .dot2 { left:730px; top:130px; border-radius:20px; transform:rotate(45deg); width:70px; height:70px; }
   /* 송출: 도형이 영상 액자가 됨 */
   .panel.live .shape { left:22px; top:22px; width:1036px; height:1876px; border-radius:84px; transform:none; }
   .panel.live .dot2 { left:968px; top:-12px; width:80px; height:80px; border-radius:40px; transform:none; }
@@ -71,9 +78,58 @@
   .panel.live .frame::after { animation: sweep 1.3s 1.1s ease-out 1; }
   @keyframes sweep { 0% { opacity:1; transform:translateX(-70%); } 100% { opacity:1; transform:translateX(70%); } }
 
-  /* 대기 화면 */
-  .idle { position:absolute; z-index:2; left:0; right:0; top:730px; display:flex; flex-direction:column; align-items:center; text-align:center; transition:opacity .6s, transform .8s var(--spring); }
+  /* 대기 화면: 준비된 장면(참여 · 시계 · 방법 · 다음 주인공)이 차례로 전환 — 좌우 벽은 한 장면씩 엇갈림 */
+  .idle { position:absolute; z-index:2; inset:0; transition:opacity .6s, transform .8s var(--spring); }
   .panel.live .idle { opacity:0; transform:translateY(40px); }
+  .scene { position:absolute; left:0; right:0; top:730px; display:flex; flex-direction:column; align-items:center; text-align:center;
+    opacity:0; transform:translateY(50px); transition:opacity .5s, transform .9s var(--spring); }
+  .scene.on { opacity:1; transform:none; transition-delay:.45s; }
+  .scene .ch { opacity:0; }
+  .scene.on.in .ch { animation: chIn .7s cubic-bezier(.2,.8,.2,1) forwards; animation-delay:calc(var(--i) * 28ms + 550ms); }
+  .t1 b { color:var(--blue); }
+  .sub { font-size:40px; color:var(--muted); margin:-12px 0 40px; }
+  .sub b { color:var(--ink); }
+  /* ② 시계 — 벽 전체가 파랑으로 채워짐 */
+  .sc-clock { top:430px; color:#fff; }
+  .sc-clock .label, .sc-frame .label { color:#bfe6ff; }
+  .clk { font-size:300px; font-weight:700; line-height:1; letter-spacing:-.03em; margin:34px 0 0; font-variant-numeric:tabular-nums; }
+  .clk i { font-style:normal; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity:.25; } }
+  .clk small { display:block; font-size:44px; font-weight:400; letter-spacing:.1em; opacity:.75; margin-top:18px; font-family:var(--mono); }
+  .rule { width:160px; height:4px; border-radius:2px; background:rgba(255,255,255,.5); margin:70px 0 60px; }
+  .left1 { font-size:64px; font-weight:700; opacity:.9; }
+  .left2 { font-size:150px; font-weight:700; line-height:1.05; margin-top:18px; letter-spacing:-.02em; font-variant-numeric:tabular-nums; text-shadow:0 0 60px rgba(143,230,255,.6); }
+  .left2 small { font-size:.5em; margin:0 .18em 0 .04em; }
+  .left3 { font-size:38px; margin-top:44px; opacity:.8; }
+  /* ③ 방법 */
+  .sc-how { top:470px; }
+  .rows { display:flex; flex-direction:column; gap:30px; margin:6px 0 0; text-align:left; }
+  .row { display:flex; align-items:center; gap:34px; width:880px; padding:30px 40px; box-sizing:border-box; border-radius:48px; background:#fff; box-shadow:0 0 0 2px var(--line), 0 20px 50px rgba(22,115,255,.12); }
+  .row .n { flex:none; width:110px; height:110px; border-radius:55px; background:var(--blue); color:#fff; font:700 60px/110px var(--mono); text-align:center; }
+  .row:nth-child(2) .n { background:var(--sky); border-radius:30px; } .row:nth-child(3) .n { background:#0b3fb0; }
+  .row b { display:block; font-size:58px; letter-spacing:-.02em; } .row span { display:block; font-size:34px; color:var(--muted); margin-top:8px; }
+  .howq { display:flex; align-items:center; gap:30px; margin-top:44px; font-size:36px; color:var(--muted); }
+  .howq .qr { width:220px; height:220px; padding:18px; border-radius:36px; }
+  .scene .row { opacity:0; transform:translateX(-60px); }
+  .scene.on.in .row { animation: rowIn .8s var(--spring) forwards; animation-delay:calc(.6s + var(--r) * .18s); }
+  @keyframes rowIn { to { opacity:1; transform:none; } }
+  /* ④ 다음 주인공 — 비어 있는 세로 액자 */
+  .sc-frame { top:300px; color:#fff; }
+  .ghost { position:relative; width:560px; height:560px; margin:70px 0 40px; }
+  .ghost::before { content:""; position:absolute; left:170px; top:0; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.2); }
+  .ghost::after { content:""; position:absolute; left:40px; top:250px; width:480px; height:300px; border-radius:240px 240px 60px 60px; background:rgba(255,255,255,.2); }
+  .ghost em { position:absolute; inset:-40px; border-radius:60px; border:4px dashed rgba(255,255,255,.55); animation: dash 1.6s linear infinite; }
+  @keyframes dash { 50% { border-color:rgba(255,255,255,.2); } }
+  .sc-frame .t1 { color:#fff; margin:0 0 24px; }
+  .eta { font-size:44px; padding:18px 40px; border-radius:999px; background:rgba(255,255,255,.18); }
+  .eta b { color:#fff; font-size:1.2em; }
+  /* 시계·주인공 장면에서는 하단 브랜드도 흰색 */
+  .panel[data-form="full"]:not(.live) .tag, .panel[data-form="frame"]:not(.live) .tag { color:#fff; }
+  .panel[data-form="full"]:not(.live) .slogan { color:#fff; }
+  .panel[data-form="full"]:not(.live) .ci.w { display:block; } .panel[data-form="full"]:not(.live) .ci.b { display:none; }
+  .panel[data-form="full"]:not(.live) .sep { background:#fff; opacity:.5; }
+  .panel[data-form="full"]:not(.live) .count { color:rgba(255,255,255,.7); } .panel[data-form="full"]:not(.live) .count b { color:#fff; }
+  .panel[data-form="full"]:not(.live) .lights i { background:#fff; }
   .label { font:600 26px/1 var(--mono); letter-spacing:.2em; color:var(--blue); }
   .t1 { font-size:86px; font-weight:700; line-height:1.22; margin:26px 0 44px; letter-spacing:-.02em; }
   .ch { display:inline-block; opacity:0; transform:translateY(.55em) rotate(7deg); }
@@ -185,10 +241,36 @@ const panels = SIDES.map((side, idx) => {
     <div class="tag">LIGHT GUESTBOOK · ${side}</div>
     <div class="frame"><video muted playsinline></video><img alt=""></div>
     <div class="idle">
-      <div class="label">NEW YEAR · LIGHT GUESTBOOK</div>
-      <div class="t1">QR을 찍고<br>새해의 첫 빛이 되어주세요</div>
-      <div class="qr">${QR}</div>
-      <div class="steps"><span><b>1</b>한마디 쓰기</span><span><b>2</b>셀피 찍기</span><span><b>3</b>외벽에 빛나기</span></div>
+      <div class="scene sc-join" data-s="join">
+        <div class="label">NEW YEAR GUESTBOOK · 참여하기</div>
+        <div class="t1 sp">QR 찍고 셀피 5초,<br><b>이 벽에 내가 나와요</b></div>
+        <div class="qr">${QR}</div>
+        <div class="steps"><span><b>1</b>한마디</span><span><b>2</b>셀피 5초</span><span><b>3</b>1~2분 뒤 이 벽에</span></div>
+      </div>
+      <div class="scene sc-clock" data-s="clock">
+        <div class="label clkLabel">NOW · 지금 시각</div>
+        <div class="clk"><span class="hh">00</span><i>:</i><span class="mm">00</span><small class="date">2026. 12. 31 WED</small></div>
+        <div class="rule"></div>
+        <div class="left1">2027년까지</div>
+        <div class="left2">-</div>
+        <div class="left3">새해 인사, 지금 남겨 주세요</div>
+      </div>
+      <div class="scene sc-how" data-s="how">
+        <div class="label">HOW TO · 참여 방법</div>
+        <div class="t1 sp" style="margin:22px 0 40px">이렇게 참여해요</div>
+        <div class="rows">
+          <div class="row" style="--r:0"><div class="n">1</div><div><b>광장 QR을 찍어요</b><span>앱 설치 없이 바로 열려요</span></div></div>
+          <div class="row" style="--r:1"><div class="n">2</div><div><b>한마디 + 셀피 5초</b><span>영상이 어려우면 사진도 OK</span></div></div>
+          <div class="row" style="--r:2"><div class="n">3</div><div><b>1~2분 뒤 이 벽에</b><span>확인 후 약 10초간 크게 나와요</span></div></div>
+        </div>
+        <div class="howq"><div class="qr">${QR}</div>지금 바로<br>찍어 보세요</div>
+      </div>
+      <div class="scene sc-frame" data-s="frame">
+        <div class="label">NEXT ON THIS WALL</div>
+        <div class="ghost"><em></em></div>
+        <div class="t1 sp">다음 주인공은<br>바로 당신</div>
+        <div class="eta">지금 찍으면 <b class="etaN">약 1분</b> 뒤 이 자리에</div>
+      </div>
     </div>
     <div class="msg"><div class="w"></div></div>
     <div class="lights"></div>
@@ -200,17 +282,55 @@ const panels = SIDES.map((side, idx) => {
     </div>
   </div>`;
   stage.appendChild(el);
-  const p = { side, el, img: el.querySelector('.frame img'), video: el.querySelector('video'), msg: el.querySelector('.msg .w'), idle: el.querySelector('.idle'), busy: false, item: null, form: idx, softT: 0 };
-  splitChars(el.querySelector('.t1'));
-  setForm(p, FORMS[idx * 2 % FORMS.length]);
+  const p = { side, el, img: el.querySelector('.frame img'), video: el.querySelector('video'), msg: el.querySelector('.msg .w'), idle: el.querySelector('.idle'), busy: false, item: null, form: idx, softT: 0,
+    scenes: [...el.querySelectorAll('.scene')], sc: idx - 1, scT: 0 };
+  el.querySelectorAll('.sp').forEach(t => splitChars(t));
   return p;
 });
 // 2D 도형으로 먼저 리드 → 잠시 뒤 그라데이션으로
 function soften(p, ms = 900) { p.el.classList.remove('soft'); clearTimeout(p.softT); p.softT = setTimeout(() => p.el.classList.add('soft'), ms); }
 function setForm(p, f) { p.el.dataset.form = f; soften(p); }
-function replayIdleText(p) { p.idle.classList.remove('in'); void p.idle.offsetWidth; p.idle.classList.add('in'); }
-panels.forEach(replayIdleText);
-setInterval(() => panels.forEach((p) => { if (p.busy) return; p.form = (p.form + 1) % FORMS.length; setForm(p, FORMS[p.form]); }), 5200);
+// ===== 대기 시퀀스 =====
+// 장면 순서 · 길이 · 도형. 좌·우 벽은 한 장면씩 엇갈려 시작 → 늘 다른 장면 (어느 한쪽엔 QR)
+const SCENES = [
+  { id: 'join',  ms: 8000, form: ['semi', 'circle'] },
+  { id: 'clock', ms: 8000, form: ['full', 'full'] },
+  { id: 'how',   ms: 9000, form: ['pill', 'capsule'] },
+  { id: 'frame', ms: 7000, form: ['frame', 'frame'] },
+];
+function showScene(p, i) {
+  p.sc = (i + SCENES.length) % SCENES.length; const S0 = SCENES[p.sc], idx = panels.indexOf(p);
+  setForm(p, S0.form[idx % 2]);
+  p.scenes.forEach(el => { const on = el.dataset.s === S0.id; el.classList.toggle('on', on); el.classList.remove('in'); if (on) { void el.offsetWidth; el.classList.add('in'); } });
+  clearTimeout(p.scT); p.scT = setTimeout(() => { if (!p.busy) showScene(p, p.sc + 1); }, S0.ms);
+}
+function replayIdleText(p) { showScene(p, p.sc + 1); } // 송출이 끝나면 다음 장면부터 이어서
+// 시계 · 남은 시간 (기본: 2027-01-01 00:00 KST, 테스트는 ?target=2026-11-18T16:00:00+09:00)
+const TARGET = new Date(QS.get('target') || '2027-01-01T00:00:00+09:00').getTime();
+const pad2 = n => String(n).padStart(2, '0');
+function tickClock() {
+  const now = new Date(), kst = new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000), diff = TARGET - now.getTime();
+  const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  let label, l1, l2, l3;
+  if (diff > 0) {
+    const t = Math.ceil(diff / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+    label = 'NOW · 지금 시각'; l1 = '2027년까지';
+    l2 = h >= 24 ? `${Math.floor(h / 24)}<small>일</small>${h % 24}<small>시간</small>` : h > 0 ? `${h}<small>시간</small>${pad2(m)}<small>분</small>` : `${m}<small>분</small>${pad2(s)}<small>초</small>`;
+    l3 = h === 0 && m < 1 ? '곧 새해예요! 함께 외쳐요' : '새해 인사, 지금 남겨 주세요';
+  } else {
+    const t = Math.floor(-diff / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+    label = 'HAPPY NEW YEAR 2027'; l1 = '2027년이 밝은 지';
+    l2 = h > 0 ? `${h}<small>시간</small>${pad2(m)}<small>분</small>` : `${m}<small>분</small>${pad2(s)}<small>초</small>`;
+    l3 = '새해 첫 인사를 이 벽에 남겨 주세요';
+  }
+  const q = (queue.length + pendingList.length) / SIDES.length, eta = Math.max(1, Math.round((q * 11 + (reviewOff ? 20 : 50)) / 60));
+  panels.forEach(p => { const e = p.el;
+    e.querySelector('.hh').textContent = pad2(kst.getHours()); e.querySelector('.mm').textContent = pad2(kst.getMinutes());
+    e.querySelector('.date').textContent = `${kst.getFullYear()}. ${pad2(kst.getMonth() + 1)}. ${pad2(kst.getDate())} ${days[kst.getDay()]}`;
+    e.querySelector('.clkLabel').textContent = label; e.querySelector('.left1').textContent = l1; e.querySelector('.left2').innerHTML = l2; e.querySelector('.left3').textContent = l3;
+    e.querySelector('.etaN').textContent = `약 ${eta}분`; });
+}
+setTimeout(() => { tickClock(); setInterval(tickClock, 500); panels.forEach(p => showScene(p, p.sc + 1)); }, 0);
 
 // 한마디: 글자 수에 맞춰 크기 조절 (최대 2줄) + 글자별 애니메이션
 function setMessage(p, text) {
@@ -343,7 +463,7 @@ function schedule() {
 }
 
 function play(p, it) {
-  p.busy = true; p.item = it;
+  p.busy = true; p.item = it; clearTimeout(p.scT);
   const url = ready.get(it.id); ready.delete(it.id);
   let count = 0;
   setMessage(p, it.message || '');
@@ -374,7 +494,7 @@ function play(p, it) {
     played++;
     setTimeout(addLight, 900); // 도형이 빛 한 점으로 줄어 수평선에 합류
     setTimeout(() => {
-      p.el.classList.remove('live', 'out', 'isPhoto'); setForm(p, FORMS[p.form]); replayIdleText(p);
+      p.el.classList.remove('live', 'out', 'isPhoto'); replayIdleText(p);
       p.video.removeAttribute('src'); p.video.load(); p.img.removeAttribute('src');
       URL.revokeObjectURL(url);
       p.busy = false; p.item = null;
