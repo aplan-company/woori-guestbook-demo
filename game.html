@@ -61,7 +61,7 @@
   /* 송출: 도형이 영상 액자가 됨 */
   .panel.live .shape { left:22px; top:22px; width:1036px; height:1876px; border-radius:84px; transform:none; }
   .panel.live .dot2 { left:968px; top:-12px; width:80px; height:80px; border-radius:40px; transform:none; }
-  .panel.out .shape { left:510px; top:1612px; width:60px; height:60px; border-radius:30px; transform:none; transition-duration:.9s; transition-timing-function:cubic-bezier(.6,0,.3,1); }
+  .panel.out .shape { left:480px; top:900px; width:120px; height:120px; border-radius:60px; transform:none; transition-duration:.9s; transition-timing-function:cubic-bezier(.6,0,.3,1); }
   .panel.out .dot2 { opacity:0; }
   .frame { position:absolute; z-index:2; left:38px; top:38px; width:1004px; height:1844px; border-radius:68px; overflow:hidden; opacity:0; transition:opacity .8s; background:#0a1a33; }
   .frame::before { content:""; position:absolute; z-index:1; left:0; right:0; bottom:0; height:46%; pointer-events:none;
@@ -465,9 +465,6 @@ const panels = SIDES.map((side, idx) => {
       </div>
     </div>
     <div class="msg"><div class="w"></div></div>
-    <div class="lights"></div>
-    <div class="horizon"></div>
-    <div class="count">LIGHTS TONIGHT <b>0000</b></div>
     <div class="brand">
       <div class="slogan">2027 새해, 우리는 해</div>
       <div class="cobrand"><img class="ci b" src="assets/ci_blue.png" alt="우리금융그룹"><img class="ci w" src="assets/ci_white.png" alt=""><i class="sep"></i><img class="ci b sac" src="assets/sac_color.png" alt="예술의전당"><img class="ci w sac" src="assets/sac_white.png" alt=""></div>
@@ -539,20 +536,7 @@ function setMessage(p, text) {
   let size = 150; w.style.fontSize = size + 'px';
   while (size > 70 && (w.scrollWidth > 960 || w.offsetHeight > size * 2 + 6)) { size -= 6; w.style.fontSize = size + 'px'; }
 }
-// 모인 빛: 한 편이 끝날 때마다 수평선 위에 빛이 하나씩 쌓임
-function renderLights(newOne) {
-  panels.forEach(p => {
-    const box = p.el.querySelector('.lights');
-    const show = Math.min(lights, 70);
-    while (box.children.length > show) box.firstChild.remove();
-    while (box.children.length < show) { const d = document.createElement('i'); d.style.left = (4 + Math.random() * 92) + '%'; d.style.bottom = (Math.random() * 46) + 'px';
-      if (!newOne) d.style.animation = 'none'; box.append(d); }
-    p.el.querySelector('.count b').textContent = String(lights).padStart(4, '0');
-    p.el.querySelector('.horizon').style.setProperty('--glow', Math.min(1, lights / 300).toFixed(3));
-  });
-}
-function addLight() { lights++; try { localStorage.setItem(LS_KEY, lights); } catch (e) {} renderLights(true); }
-renderLights(false);
+function renderLights() {} // 하단 빛 띠는 제거됨 (송출 수는 lights 변수·HUD로만 확인)
 
 function fit() {
   const sc = Math.min(innerWidth / STAGE_W, innerHeight / PANEL_H);
@@ -684,7 +668,7 @@ function play(p, it) {
     p.el.classList.add('out'); p.el.classList.remove('soft');
     Relay.setStatus(it.id, 'played', p.side).catch(() => {}); // → 중간지점에서 즉시 파기
     played++;
-    setTimeout(addLight, 900); // 도형이 빛 한 점으로 줄어 수평선에 합류
+    lights++; try { localStorage.setItem(LS_KEY, lights); } catch (e) {} // 송출 수 기록만 (화면 표시 없음)
     setTimeout(() => {
       p.el.classList.remove('live', 'out', 'isPhoto'); replayIdleText(p);
       p.video.removeAttribute('src'); p.video.load(); p.img.removeAttribute('src');
