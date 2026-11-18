@@ -36,12 +36,22 @@
     transition: left 1.4s var(--spring), top 1.4s var(--spring), width 1.4s var(--spring), height 1.4s var(--spring), border-radius 1.4s var(--spring), transform 1.4s var(--spring), box-shadow 1s, opacity .5s; }
   .shape::before, .shape::after { content:""; position:absolute; inset:0; border-radius:inherit; transition:opacity .9s; }
   .shape::before { background:#1673ff; }
-  .shape::after { opacity:0; background-size:220% 220%; animation: flow 7s ease-in-out infinite alternate;
-    background-image: radial-gradient(60% 60% at 30% 25%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 60%), linear-gradient(135deg,#8fe6ff 0%,#39b8ff 25%,#1673ff 55%,#0b5bd6 75%,#5fd0ff 100%); }
+  /* 광택(하이라이트·외곽 글로우) 없이, 도형 안에서 빛의 색면이 천천히 흐르는 이머시브 표면 */
+  .shape::after { opacity:0; background-color:#1673ff;
+    background-image:
+      radial-gradient(42% 38% at 50% 50%, rgba(95,208,255,.85) 0%, rgba(95,208,255,0) 100%),
+      radial-gradient(46% 42% at 50% 50%, rgba(11,52,150,.9) 0%, rgba(11,52,150,0) 100%),
+      radial-gradient(36% 34% at 50% 50%, rgba(57,184,255,.7) 0%, rgba(57,184,255,0) 100%);
+    background-size: 160% 160%, 170% 170%, 150% 150%; background-repeat:no-repeat;
+    background-position: 0% 0%, 100% 100%, 100% 0%;
+    animation: drift 14s ease-in-out infinite alternate; }
   .panel.soft .shape::before { opacity:0; }
   .panel.soft .shape::after { opacity:1; }
-  .panel.soft .shape { box-shadow:0 40px 120px rgba(22,115,255,.35), 0 0 200px rgba(57,184,255,.3); }
-  @keyframes flow { to { background-position:100% 100%; } }
+  @keyframes drift {
+    0%   { background-position: 0% 0%,   100% 100%, 100% 0%; }
+    33%  { background-position: 90% 30%, 10% 80%,  20% 100%; }
+    66%  { background-position: 40% 100%, 70% 0%,  0% 40%; }
+    100% { background-position: 100% 70%, 0% 30%,  70% 90%; } }
   .panel[data-form="semi"] .shape { left:0; top:0; width:1080px; height:600px; border-radius:0 0 540px 540px / 0 0 600px 600px; transform:none; }
   .panel[data-form="square"] .shape { left:330px; top:200px; width:420px; height:420px; border-radius:96px; transform:rotate(-10deg); }
   .panel[data-form="capsule"] .shape { left:120px; top:320px; width:840px; height:260px; border-radius:130px; transform:none; }
@@ -50,7 +60,7 @@
   .panel[data-form="frame"] .shape { left:120px; top:200px; width:840px; height:1320px; border-radius:84px; transform:none; }
   .panel[data-form="pill"] .shape { left:330px; top:170px; width:420px; height:220px; border-radius:110px; transform:rotate(-6deg); }
   .panel[data-form="capsule"]:has(.sc-how.on) .shape { top:150px; height:230px; }
-  .dot2 { position:absolute; z-index:2; width:90px; height:90px; border-radius:45px; background:linear-gradient(135deg,#c9f4ff,#19c3ff); left:840px; top:560px;
+  .dot2 { position:absolute; z-index:2; width:90px; height:90px; border-radius:45px; background:#19c3ff; left:840px; top:560px;
     transition: left 1.4s var(--spring), top 1.4s var(--spring), border-radius 1.4s var(--spring), transform 1.4s var(--spring), opacity .5s; }
   .panel[data-form="square"] .dot2 { left:740px; top:560px; }
   .panel[data-form="capsule"] .dot2 { left:900px; top:270px; border-radius:16px; transform:rotate(45deg); width:70px; height:70px; }
