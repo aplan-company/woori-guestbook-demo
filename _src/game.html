@@ -47,6 +47,11 @@
     animation: drift 14s ease-in-out infinite alternate; }
   .panel.soft .shape::before { opacity:0; }
   .panel.soft .shape::after { opacity:1; }
+  /* 작은 도형(원·사각·캡슐·알약)은 단색, 큰 도형(반원·전면·액자·송출 프레임)만 흐르는 그라데이션 */
+  .panel.soft:not(.live)[data-form="circle"] .shape::before, .panel.soft:not(.live)[data-form="square"] .shape::before,
+  .panel.soft:not(.live)[data-form="capsule"] .shape::before, .panel.soft:not(.live)[data-form="pill"] .shape::before { opacity:1; }
+  .panel.soft:not(.live)[data-form="circle"] .shape::after, .panel.soft:not(.live)[data-form="square"] .shape::after,
+  .panel.soft:not(.live)[data-form="capsule"] .shape::after, .panel.soft:not(.live)[data-form="pill"] .shape::after { opacity:0; }
   @keyframes drift {
     0%   { background-position: 0% 0%,   100% 100%, 100% 0%; }
     33%  { background-position: 90% 30%, 10% 80%,  20% 100%; }
