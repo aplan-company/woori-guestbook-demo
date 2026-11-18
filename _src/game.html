@@ -284,7 +284,7 @@ const panels = SIDES.map((side, idx) => {
         <div class="label">NEXT ON THIS WALL</div>
         <div class="ghost"><em></em></div>
         <div class="t1 sp">다음 주인공은<br>바로 당신</div>
-        <div class="eta">지금 찍으면 <b class="etaN">약 1분</b> 뒤 이 자리에</div>
+        <div class="eta etaT">새해 인사, 지금 여기에</div>
       </div>
     </div>
     <div class="msg"><div class="w"></div></div>
@@ -310,8 +310,14 @@ const SCENES = [
   { id: 'how',   ms: 9000, form: ['pill', 'capsule'] },
   { id: 'frame', ms: 7000, form: ['frame', 'frame'] },
 ];
+// 「다음 주인공」 장면 하단 문장 — 나올 때마다 무작위 (직전 문장과 겹치지 않게)
+const INVITES = ['새해 인사, 지금 여기에', '당신의 한마디, 이 벽에', '2027년 첫 인사, 여기서', '오늘 밤의 주인공, 지금 여기에',
+  '가족에게 한마디, 이 벽에', '올해의 다짐, 지금 여기에', '고마운 사람에게, 이 벽에서', '새해 첫 셀피, 여기에'];
+let lastInvite = -1;
+function pickInvite() { let k; do { k = Math.floor(Math.random() * INVITES.length); } while (k === lastInvite && INVITES.length > 1); lastInvite = k; return INVITES[k]; }
 function showScene(p, i) {
   p.sc = (i + SCENES.length) % SCENES.length; const S0 = SCENES[p.sc], idx = panels.indexOf(p);
+  if (S0.id === 'frame') p.el.querySelector('.etaT').textContent = pickInvite();
   setForm(p, S0.form[idx % 2]);
   p.scenes.forEach(el => { const on = el.dataset.s === S0.id; el.classList.toggle('on', on); el.classList.remove('in'); if (on) { void el.offsetWidth; el.classList.add('in'); } });
   clearTimeout(p.scT); p.scT = setTimeout(() => { if (!p.busy) showScene(p, p.sc + 1); }, S0.ms);
@@ -335,12 +341,11 @@ function tickClock() {
     l2 = h > 0 ? `${h}<small>시간</small>${pad2(m)}<small>분</small>` : `${m}<small>분</small>${pad2(s)}<small>초</small>`;
     l3 = '새해 첫 인사를 이 벽에 남겨 주세요';
   }
-  const q = (queue.length + pendingList.length) / SIDES.length, eta = Math.max(1, Math.round((q * 11 + (reviewOff ? 20 : 50)) / 60));
   panels.forEach(p => { const e = p.el;
     e.querySelector('.hh').textContent = pad2(kst.getHours()); e.querySelector('.mm').textContent = pad2(kst.getMinutes());
     e.querySelector('.date').textContent = `${kst.getFullYear()}. ${pad2(kst.getMonth() + 1)}. ${pad2(kst.getDate())} ${days[kst.getDay()]}`;
     e.querySelector('.clkLabel').textContent = label; e.querySelector('.left1').textContent = l1; e.querySelector('.left2').innerHTML = l2; e.querySelector('.left3').textContent = l3;
-    e.querySelector('.etaN').textContent = `약 ${eta}분`; });
+  });
 }
 setTimeout(() => { tickClock(); setInterval(tickClock, 500); panels.forEach(p => showScene(p, p.sc + 1)); }, 0);
 
